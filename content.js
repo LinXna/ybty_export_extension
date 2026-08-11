@@ -270,9 +270,22 @@
     const scores = [...match.querySelectorAll(".score")].map((node) =>
       clean(node.textContent)
     );
-    const rawClock = text(match, ".timer-layout2");
+
+    // 1. 扩充时间与阶段文本选择器（兼容 .timer-layout1、.match-status 等节点）
+    let rawClock = text(
+      match,
+      ".timer-layout2, .timer-layout1, .timer-layout, .match-time, .match-status, .period-name, [class*='timer'], [class*='status']"
+    );
+
+    // 2. 兜底逻辑：若选择器未抓到，直接从卡片文本中匹配中场/半场关键字
+    const fullText = clean(match.textContent);
+    if (!rawClock) {
+      const stageMatch = fullText.match(/(中场休息|中场|半场|HT|加时)/i);
+      if (stageMatch) rawClock = stageMatch[0];
+    }
+
     const liveClock = (rawClock.match(/\d{1,3}:\d{2}/) || [])[0] || null;
-    const addedMatch = clean(match.textContent).match(/\+(\d{1,2})\s*['′]/);
+    const addedMatch = fullText.match(/\+(\d{1,2})\s*['′]/);
     const columns = [...match.querySelectorAll(COLUMN_SELECTOR)];
     const marketCounters = {};
     const markets = columns.map((column, index) => {
@@ -374,8 +387,9 @@
   }
 
   function isLiveMatch(match) {
-    const clock = clean(match.clock || match.clock_status);
-    return /(?:^\d{1,3}:\d{2}$|\d{1,3}\s*['′]|中场|半场|HT|加时|完场)/i.test(clock);
+    const clock = clean(match.clock || match.clock_status || "");
+    // 扩充对中场休息、半场、HT、休息等状态文本的正则匹配
+    return /(?:^\d{1,3}:\d{2}$|\d{1,3}\s*['′]|中场|半场|HT|休息|加时|完场)/i.test(clock);
   }
 
   function downloadJson(matches, mode, context, summary) {
