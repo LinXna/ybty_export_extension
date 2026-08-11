@@ -1,0 +1,86 @@
+{
+  "manifest_version": 3,
+  "name": "YBTY盘口与雷速数据导出",
+  "version": "2.7.15",
+  "permissions": ["tabs"],
+  "host_permissions": [
+    "https://live.leisu.com/*",
+    "https://odds.leisu.com/*",
+    "https://widget.namitiyu.com/*",
+    "https://tracker.namitiyu.com/*",
+    "https://tracker-api.namitiyu.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "description": "分别导出滚球和非滚球的YBTY盘口及雷速赛事数据。",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.mv3j33.vip:8663/*",
+        "https://*.mv3j33.vip:8663/*",
+        "https://zlshelves.com/*",
+        "https://*.zlshelves.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.mv3j33.vip:8663/*",
+        "https://*.mv3j33.vip:8663/*",
+        "https://zlshelves.com/*",
+        "https://*.zlshelves.com/*",
+        "https://live.leisu.com/*",
+        "https://odds.leisu.com/*"
+      ],
+      "js": ["leisu_canvas_capture.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://odds.leisu.com/*"],
+      "js": ["leisu_odds_detail_bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://live.leisu.com/detail-*"],
+      "js": ["leisu_detail_network.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://live.leisu.com/detail-*"],
+      "js": ["leisu_detail_bridge.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://widget.namitiyu.com/*",
+        "https://tracker.namitiyu.com/*"
+      ],
+      "js": ["leisu_widget_network.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://widget.namitiyu.com/*",
+        "https://tracker.namitiyu.com/*"
+      ],
+      "js": ["leisu_widget_bridge.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://live.leisu.com/*"],
+      "js": ["leisu_content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
