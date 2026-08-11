@@ -55,7 +55,7 @@
         status: Number(status || 0),
         data
       },
-      "*"
+      window.location.origin // 替换 '*'，防止信息泄露
     );
   };
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
@@ -96,7 +96,7 @@
       if (relevant(url)) {
         serialize(response)
           .then((data) => publish(url, response.status, data))
-          .catch(() => {});
+          .catch(() => { });
       }
       return response;
     };

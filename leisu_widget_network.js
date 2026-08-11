@@ -18,7 +18,7 @@
       try {
         data = JSON.parse(body);
       } catch {
-        // Keep the raw response for diagnostics if the provider changes format.
+        // 保留原始响应
       }
     }
     window.postMessage(
@@ -29,7 +29,7 @@
         status: Number(status || 0),
         data
       },
-      "*"
+      window.location.origin // 替换 '*'，防止信息泄露
     );
   }
 
@@ -127,7 +127,7 @@
           .clone()
           .text()
           .then((body) => publish(url, response.status, body))
-          .catch(() => {});
+          .catch(() => { });
       }
       return response;
     };

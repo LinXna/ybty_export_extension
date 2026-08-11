@@ -8,7 +8,7 @@
   const COLUMN_SELECTOR = ".handicap-col";
   const BET_SELECTOR = ".c-bet-item";
   const SCHEMA_VERSION = 2;
-  const EXPORT_VERSION = "2.6.0";
+  const EXPORT_VERSION = "2.8.0";
   const MARKET_LABELS = [
     { market: "half_h2h", patterns: [/半场.*(?:独赢|胜平负|1x2)/i] },
     { market: "half_spread", patterns: [/半场.*让球/i] },
@@ -132,23 +132,44 @@
     return null;
   }
 
-  function localMarketContext(column) {
+  function localMarketContext(column, columnIndex = 0, matchNode = null) {
     const values = [];
     const add = (value) => {
       const cleaned = clean(value);
-      if (cleaned && !values.includes(cleaned)) values.push(cleaned);
+      // 过滤掉纯 CSS 类名与杂项字符串
+      if (
+        cleaned &&
+        !values.includes(cleaned) &&
+        !/^(handicap|match|col|row|wrap|item|bd-|bg-|no-wrap)/i.test(cleaned)
+      ) {
+        values.push(cleaned);
+      }
     };
+
+    // 向上查找 DOM 节点中的文本与属性
     let node = column;
-    for (let depth = 0; node && depth < 4; depth += 1, node = node.parentElement) {
+    for (let depth = 0; node && depth < 6; depth += 1, node = node.parentElement) {
       for (const attribute of ["data-market-name", "data-market", "data-type", "aria-label", "title"]) {
         add(node.getAttribute?.(attribute));
       }
-      add(node.className);
       const header = node.querySelector?.(
-        ":scope > .handicap-title,:scope > .market-title,:scope > .play-title,:scope > .handicap-header,:scope > [data-market-name]"
+        ":scope > .handicap-title, :scope > .market-title, :scope > .play-title, :scope > .handicap-header, [data-market-name]"
       );
       if (header && !header.contains(column)) add(header.textContent || header.getAttribute("data-market-name"));
     }
+
+    // 若局部节点提取不到标题，向外匹配列表顶部的全局列表头（对应第 columnIndex 列）
+    if (!values.length) {
+      const card = matchNode || column.closest(MATCH_SELECTOR);
+      const container = card?.parentElement || document;
+      const globalHeaderCols = [...container.querySelectorAll(
+        ".handicap-header .col, .play-header .col, .table-header .col, .play-title-item, .handicap-title"
+      )];
+      if (globalHeaderCols[columnIndex]) {
+        add(globalHeaderCols[columnIndex].textContent);
+      }
+    }
+
     return values.join(" | ");
   }
 
@@ -166,18 +187,20 @@
   function verifiedMarketType(context, options) {
     const explicit = classifyMarketTitle(context);
     const family = semanticFamily(options);
+
     if (explicit === "corner" || explicit === "correct_score") {
       return { market: explicit, verified: true, source: "local_dom_title" };
     }
-    const period = /半场|上半场|first[ _-]?half|half/i.test(context)
-      ? "half"
-      : /全场|full[ _-]?(?:time|match)|90分钟/i.test(context)
-        ? "full"
-        : null;
+
+    // 判别半场/全场：若无半场关键字，默认按全场（full）校验
+    const isHalf = /半场|上半场|first[ _-]?half|half/i.test(context);
+    const period = isHalf ? "half" : "full";
+
     const explicitFamily = explicit?.replace(/^(?:full|half)_/, "") || null;
-    if (period && family && (!explicitFamily || explicitFamily === family)) {
-      return { market: `${period}_${family}`, verified: true, source: "local_dom_and_option_semantics" };
+    if (family && (!explicitFamily || explicitFamily === family)) {
+      return { market: `${period}_${family}`, verified: true, source: "dom_title_and_option_semantics" };
     }
+
     return {
       market: family ? `unclassified_${family}` : "unclassified",
       verified: false,
@@ -253,7 +276,7 @@
     const columns = [...match.querySelectorAll(COLUMN_SELECTOR)];
     const marketCounters = {};
     const markets = columns.map((column, index) => {
-      const localTitle = localMarketContext(column);
+      const localTitle = localMarketContext(column, index, match);
       const preliminaryOptions = [...column.querySelectorAll(BET_SELECTOR)].map(
         (item, optionIndex) => parseBet(item, optionIndex, "")
       );
@@ -375,7 +398,7 @@
     const link = document.createElement("a");
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     link.href = URL.createObjectURL(blob);
-    link.download = `ybty_${mode}_${stamp}.json`;
+    link.download = `ybty_v${EXPORT_VERSION}_${mode}_${stamp}.json`;
     document.documentElement.appendChild(link);
     link.click();
     link.remove();

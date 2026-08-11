@@ -191,7 +191,7 @@
     sendDom("odd-panel", {
       available: panels.length > 0,
       panel_count: panels.length,
-        panels
+      panels
     });
   }
 
@@ -286,7 +286,14 @@
   }
 
   window.addEventListener("message", (event) => {
-    if (event.source !== window || event.data?.source !== "codex-leisu-detail-api") return;
+    // 增加 event.origin 安全校验
+    if (
+      event.origin !== window.location.origin ||
+      event.source !== window ||
+      event.data?.source !== "codex-leisu-detail-api"
+    ) {
+      return;
+    }
     chrome.runtime.sendMessage({
       type: "CODEX_LEISU_DETAIL_API_RESPONSE",
       match_id: String(event.data.match_id || ""),

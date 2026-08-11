@@ -13,15 +13,19 @@
   const originalStrokeText = proto.strokeText;
   const originalClearRect = proto.clearRect;
 
+  // 使用 WeakMap 在内存中直接维护 Canvas 对应的指令数组，避免高频 JSON.parse 开销
+  const canvasCommandsMap = new WeakMap();
+
   function remember(context, method, text, x, y) {
     const canvas = context.canvas;
     if (!canvas) return;
-    let commands = [];
-    try {
-      commands = JSON.parse(canvas.dataset.codexCanvasText || "[]");
-    } catch {
+
+    let commands = canvasCommandsMap.get(canvas);
+    if (!commands) {
       commands = [];
+      canvasCommandsMap.set(canvas, commands);
     }
+
     commands.push({
       method,
       text: String(text ?? ""),
@@ -31,7 +35,13 @@
       fillStyle: String(context.fillStyle || ""),
       timestamp: Date.now()
     });
-    canvas.dataset.codexCanvasText = JSON.stringify(commands.slice(-30));
+
+    if (commands.length > 30) {
+      commands.shift();
+    }
+
+    // 同步写入 DOM 属性以供 ISOLATED 作用域脚本读取
+    canvas.dataset.codexCanvasText = JSON.stringify(commands);
   }
 
   proto.fillText = function (...args) {
@@ -52,6 +62,7 @@
       Number(args[2]) >= this.canvas.width &&
       Number(args[3]) >= this.canvas.height
     ) {
+      canvasCommandsMap.set(this.canvas, []);
       this.canvas.dataset.codexCanvasText = "[]";
     }
     return originalClearRect.apply(this, args);

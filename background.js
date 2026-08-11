@@ -2,6 +2,17 @@ const pendingDetails = new Map();
 const pendingLiveApi = new Map();
 const recentDetailApi = new Map();
 
+// 定时清理过期缓存（超过10分钟的缓存自动释放）
+const MAP_TTL_MS = 10 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [matchId, value] of recentDetailApi.entries()) {
+    if (now - (value.captured_at || 0) > MAP_TTL_MS) {
+      recentDetailApi.delete(matchId);
+    }
+  }
+}, 5 * 60 * 1000);
+
 function collectLeisuDetailApi(matchId) {
   return new Promise((resolve) => {
     recentDetailApi.delete(matchId);
@@ -32,7 +43,7 @@ function collectLeisuDetailApi(matchId) {
             setTimeout(finishWhenReady, 250);
             return;
           }
-          chrome.tabs.remove(tab.id).catch(() => {});
+          chrome.tabs.remove(tab.id).catch(() => { });
           resolve({
             available: Boolean(value && Object.keys(responses).length),
             reason: domReady
@@ -56,7 +67,7 @@ function finishLiveApi(matchId, reason = null) {
   clearTimeout(pending.timer);
   clearTimeout(pending.finishTimer);
   pendingLiveApi.delete(matchId);
-  if (pending.tabId) chrome.tabs.remove(pending.tabId).catch(() => {});
+  if (pending.tabId) chrome.tabs.remove(pending.tabId).catch(() => { });
   const endpoints = pending.endpoints;
   pending.resolve({
     available: Object.keys(endpoints).length > 0,
@@ -70,9 +81,6 @@ function finishLiveApi(matchId, reason = null) {
 function scheduleLiveApiFinish(matchId) {
   const pending = pendingLiveApi.get(matchId);
   if (!pending || pending.finishTimer) return;
-  // Give optional endpoints a short grace period after the three core
-  // responses arrive. This keeps exports fast while capturing lineup,
-  // commentary, weather or player calls issued just afterwards.
   pending.finishTimer = setTimeout(() => finishLiveApi(matchId), 650);
 }
 
@@ -96,7 +104,7 @@ function collectOddsDetail(matchId) {
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
       const pending = pendingDetails.get(matchId);
-      if (pending?.tabId) chrome.tabs.remove(pending.tabId).catch(() => {});
+      if (pending?.tabId) chrome.tabs.remove(pending.tabId).catch(() => { });
       pendingDetails.delete(matchId);
       resolve({
         available: false,
@@ -203,7 +211,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!pending) return;
     clearTimeout(pending.timer);
     pendingDetails.delete(matchId);
-    chrome.tabs.remove(pending.tabId).catch(() => {});
+    chrome.tabs.remove(pending.tabId).catch(() => { });
     pending.resolve({ available: true, ...message.payload });
     return;
   }

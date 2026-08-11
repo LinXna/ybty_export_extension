@@ -9,7 +9,7 @@
   const CONCURRENCY_ID = "codex-leisu-detail-concurrency";
   const SELECT_ID = "codex-leisu-select-mode";
   const SCHEMA_VERSION = 3;
-const EXPORT_VERSION = "2.7.15";
+  const EXPORT_VERSION = "2.8.0";
   const clean = (value) => String(value || "").replace(/\s+/g, " ").trim();
   let collecting = false;
   let selectionMode = false;
@@ -22,7 +22,7 @@ const EXPORT_VERSION = "2.7.15";
     const link = document.createElement("a");
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     link.href = URL.createObjectURL(blob);
-    link.download = `leisu_${mode}_${stamp}.json`;
+    link.download = `leisu_v${EXPORT_VERSION}_${mode}_${stamp}.json`;
     document.documentElement.appendChild(link);
     link.click();
     link.remove();
@@ -495,12 +495,12 @@ const EXPORT_VERSION = "2.7.15";
             : sectionMode === "prematch"
               ? "notstarted"
               : finished
-            ? "finished"
-            : minuteMatch && !notStarted
-            ? "inprogress"
-            : halftime
-              ? "halftime"
-              : "notstarted",
+                ? "finished"
+                : minuteMatch && !notStarted
+                  ? "inprogress"
+                  : halftime
+                    ? "halftime"
+                    : "notstarted",
         source: sectionMode ? "leisu_section_title" : "row_text_fallback",
         verified: Boolean(sectionMode) || finished || Boolean(minuteMatch) || halftime || notStarted
       },
@@ -1148,9 +1148,15 @@ const EXPORT_VERSION = "2.7.15";
 
   function loadHistory() {
     try {
-      const value = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-      return Array.isArray(value) ? value : [];
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) return [];
+      const value = JSON.parse(raw);
+      if (!Array.isArray(value)) return [];
+      return value.filter(
+        (item) => item && typeof item === "object" && typeof item.timestamp === "number"
+      );
     } catch {
+      localStorage.removeItem(HISTORY_KEY); // 数据损坏时自动重置
       return [];
     }
   }
@@ -1246,18 +1252,18 @@ const EXPORT_VERSION = "2.7.15";
         trends[`last_${minutes}_minutes`] =
           prior && hasEnoughActivePlay && delta && Object.keys(delta).length
             ? {
-                available: true,
-                baseline_timestamp: prior.timestamp,
-                ...delta
-              }
+              available: true,
+              baseline_timestamp: prior.timestamp,
+              ...delta
+            }
             : {
-                available: false,
-                reason: !prior
-                  ? "no_baseline"
-                  : !hasEnoughActivePlay
-                    ? "insufficient_active_play"
-                    : "statistics_regressed"
-              };
+              available: false,
+              reason: !prior
+                ? "no_baseline"
+                : !hasEnoughActivePlay
+                  ? "insufficient_active_play"
+                  : "statistics_regressed"
+            };
         const currentTrend = trends[`last_${minutes}_minutes`];
         if (!currentTrend.available && currentTrend.reason !== "statistics_regressed") {
           const fallback = timelineTrendFallback(event, minutes);
@@ -1474,18 +1480,18 @@ const EXPORT_VERSION = "2.7.15";
       }
       const parsedEvents = [...byId.values()];
       const events = parsedEvents.filter((event) => {
-      const value = [
-        event.tournament?.name,
-        event.homeTeam?.name,
-        event.awayTeam?.name
-      ]
-        .filter(Boolean)
-        .join(" ");
-      return !value.includes("梦幻对垒")
-        && !value.includes("瓦尔哈拉杯")
-        && !value.includes("开云")
-        && !/(?:^|\s)VS\s*[-－]/i.test(value)
-        && !/(?:^|\D)(?:8|10|12)分钟(?:\D|$)/.test(value);
+        const value = [
+          event.tournament?.name,
+          event.homeTeam?.name,
+          event.awayTeam?.name
+        ]
+          .filter(Boolean)
+          .join(" ");
+        return !value.includes("梦幻对垒")
+          && !value.includes("瓦尔哈拉杯")
+          && !value.includes("开云")
+          && !/(?:^|\s)VS\s*[-－]/i.test(value)
+          && !/(?:^|\D)(?:8|10|12)分钟(?:\D|$)/.test(value);
       });
       const eligibleEvents = events;
       const limit = exportLimit();
@@ -1685,26 +1691,26 @@ const EXPORT_VERSION = "2.7.15";
           duration_seconds: duration
         };
         download({
-        schema_version: SCHEMA_VERSION,
-        export_version: EXPORT_VERSION,
-        source: "leisu",
-        source_url: location.href,
-        page_title: clean(document.title),
-        provider: "leisu",
-        export_mode: mode,
-        export_profile: mode === "live" ? "full" : "prematch",
-        collection_started_at: new Date(collectionStartedAt).toISOString(),
-        captured_at: new Date(now).toISOString(),
-        collection_duration_seconds: duration,
-        count: exportEvents.length,
-        prematch_count: mode === "prematch" ? selectedEvents.length : 0,
-        live_count: liveEvents.length,
-        candidate_row_count: rows.length,
-        unparsed_count: unparsedRows.length,
-        unparsed_rows: unparsedRows,
-        summary,
-        events: exportEvents
-      }, mode);
+          schema_version: SCHEMA_VERSION,
+          export_version: EXPORT_VERSION,
+          source: "leisu",
+          source_url: location.href,
+          page_title: clean(document.title),
+          provider: "leisu",
+          export_mode: mode,
+          export_profile: mode === "live" ? "full" : "prematch",
+          collection_started_at: new Date(collectionStartedAt).toISOString(),
+          captured_at: new Date(now).toISOString(),
+          collection_duration_seconds: duration,
+          count: exportEvents.length,
+          prematch_count: mode === "prematch" ? selectedEvents.length : 0,
+          live_count: liveEvents.length,
+          candidate_row_count: rows.length,
+          unparsed_count: unparsedRows.length,
+          unparsed_rows: unparsedRows,
+          summary,
+          events: exportEvents
+        }, mode);
         const detailMessage = detailFailures
           ? `；基础数据成功，详细数据未完整获取${detailFailures}场`
           : "；详情完整";
