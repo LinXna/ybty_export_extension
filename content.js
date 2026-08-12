@@ -136,37 +136,47 @@
     const values = [];
     const add = (value) => {
       const cleaned = clean(value);
-      // 过滤掉纯 CSS 类名与杂项字符串
       if (
         cleaned &&
         !values.includes(cleaned) &&
-        !/^(handicap|match|col|row|wrap|item|bd-|bg-|no-wrap)/i.test(cleaned)
+        !/^(handicap|match|col|row|wrap|item|bd-|bg-|no-wrap|\d+$)/i.test(cleaned)
       ) {
         values.push(cleaned);
       }
     };
 
-    // 向上查找 DOM 节点中的文本与属性
+    // 1. 局部 DOM 节点属性查找
     let node = column;
     for (let depth = 0; node && depth < 6; depth += 1, node = node.parentElement) {
       for (const attribute of ["data-market-name", "data-market", "data-type", "aria-label", "title"]) {
         add(node.getAttribute?.(attribute));
       }
-      const header = node.querySelector?.(
-        ":scope > .handicap-title, :scope > .market-title, :scope > .play-title, :scope > .handicap-header, [data-market-name]"
-      );
-      if (header && !header.contains(column)) add(header.textContent || header.getAttribute("data-market-name"));
     }
 
-    // 若局部节点提取不到标题，向外匹配列表顶部的全局列表头（对应第 columnIndex 列）
-    if (!values.length) {
-      const card = matchNode || column.closest(MATCH_SELECTOR);
-      const container = card?.parentElement || document;
-      const globalHeaderCols = [...container.querySelectorAll(
-        ".handicap-header .col, .play-header .col, .table-header .col, .play-title-item, .handicap-title"
+    // 2. 向外匹配列表顶部的全局表头（提取列文本 + 父级区域“全场/上半场”标题）
+    const card = matchNode || column.closest(MATCH_SELECTOR);
+    const container = card?.parentElement || document;
+    const headerContainer = container.querySelector(
+      ".handicap-header, .play-header, .table-header, .grid-header, .col-header"
+    );
+
+    if (headerContainer) {
+      const globalHeaderCols = [...headerContainer.querySelectorAll(
+        ".col, .play-title-item, .handicap-title, [class*='header-col']"
       )];
-      if (globalHeaderCols[columnIndex]) {
-        add(globalHeaderCols[columnIndex].textContent);
+      const targetCol = globalHeaderCols[columnIndex];
+      if (targetCol) {
+        add(targetCol.textContent);
+        // 向上查找包含“全场/上半场”大区域标题的父级节点
+        let parentSection = targetCol.parentElement;
+        for (let d = 0; parentSection && d < 4; d += 1, parentSection = parentSection.parentElement) {
+          const sectionTitle = parentSection.querySelector(
+            ".section-title, .group-title, .header-title, .title, .stage-name"
+          );
+          if (sectionTitle && !sectionTitle.contains(targetCol)) {
+            add(sectionTitle.textContent);
+          }
+        }
       }
     }
 
@@ -184,7 +194,7 @@
     return null;
   }
 
-  function verifiedMarketType(context, options) {
+  function verifiedMarketType(context, options, columnIndex = 0) {
     const explicit = classifyMarketTitle(context);
     const family = semanticFamily(options);
 
@@ -192,8 +202,18 @@
       return { market: explicit, verified: true, source: "local_dom_title" };
     }
 
-    // 判别半场/全场：若无半场关键字，默认按全场（full）校验
-    const isHalf = /半场|上半场|first[ _-]?half|half/i.test(context);
+    // 优先通过文本关键字判定
+    let isHalf = /半场|上半场|first[ _-]?half|1st[ _-]?half|half/i.test(context);
+
+    // 兜底逻辑：若文本未明确包含“全场”或“半场”，根据 YBTY 列网格位置判断
+    // YBTY 主盘口前 6 列中，0-2 列为全场(独赢/让球/大小)，3-5 列为半场(独赢/让球/大小)
+    if (!isHalf && !/全场|full/i.test(context)) {
+      const colInGroup = columnIndex % 6;
+      if (colInGroup >= 3 && colInGroup <= 5) {
+        isHalf = true;
+      }
+    }
+
     const period = isHalf ? "half" : "full";
 
     const explicitFamily = explicit?.replace(/^(?:full|half)_/, "") || null;
@@ -274,26 +294,33 @@
     // 1. 扩充时间与阶段文本选择器（兼容 .timer-layout1、.match-status 等节点）
     let rawClock = text(
       match,
-      ".timer-layout2, .timer-layout1, .timer-layout, .match-time, .match-status, .period-name, [class*='timer'], [class*='status']"
+      ".timer-layout2, .timer-layout1, .timer-layout, .match-time, .match-status, .period-name, .countdown, .time-box, [class*='timer'], [class*='status']"
     );
 
-    // 2. 兜底逻辑：若选择器未抓到，直接从卡片文本中匹配中场/半场关键字
+    // 2. 兜底逻辑：若选择器未抓到，直接从卡片文本中匹配中场/半场关键字或状态节点
     const fullText = clean(match.textContent);
     if (!rawClock) {
       const stageMatch = fullText.match(/(中场休息|中场|半场|HT|加时)/i);
-      if (stageMatch) rawClock = stageMatch[0];
+      if (stageMatch) {
+        rawClock = stageMatch[0];
+      } else {
+        const timeNode = match.querySelector("[class*='time'], [class*='clock'], [class*='status']");
+        if (timeNode) rawClock = clean(timeNode.textContent);
+      }
     }
 
-    const liveClock = (rawClock.match(/\d{1,3}:\d{2}/) || [])[0] || null;
+    const liveClock = (rawClock ? rawClock.match(/\d{1,3}:\d{2}/) : null)?.[0] || null;
     const addedMatch = fullText.match(/\+(\d{1,2})\s*['′]/);
     const columns = [...match.querySelectorAll(COLUMN_SELECTOR)];
     const marketCounters = {};
     const markets = columns.map((column, index) => {
       const localTitle = localMarketContext(column, index, match);
+      // parseMatch 函数内部修改：
       const preliminaryOptions = [...column.querySelectorAll(BET_SELECTOR)].map(
         (item, optionIndex) => parseBet(item, optionIndex, "")
       );
-      const identified = verifiedMarketType(localTitle, preliminaryOptions);
+      // 传入 index 作为第三个参数
+      const identified = verifiedMarketType(localTitle, preliminaryOptions, index);
       const options = [...column.querySelectorAll(BET_SELECTOR)].map(
         (item, optionIndex) => parseBet(item, optionIndex, identified.market)
       );
@@ -318,11 +345,48 @@
       };
     });
 
+    // === 【修改点 1】：清理占位空盘口 & 剔除让球/大小盘口的第三个多余 null 选项 ===
+    let validMarkets = markets
+      .filter((m) => {
+        if (m.market === "unclassified" || !m.market_type_verified) {
+          const hasValidData = m.options.some(
+            (opt) => opt.market_data_available && opt.odds !== ""
+          );
+          if (!hasValidData) return false;
+        }
+        return true;
+      })
+      .map((m) => {
+        const isTwoWay = /spread|total/i.test(m.market);
+        if (isTwoWay) {
+          m.options = m.options.filter(
+            (opt) => opt.side !== null && opt.text !== "-"
+          );
+        }
+        return m;
+      });
+
+    // === 【修改点 2】：规范排序 (按 line_index 升序 -> 按 独赢/让球/大小 优先级排序) ===
+    const marketPriority = {
+      full_h2h: 1, full_spread: 2, full_total: 3,
+      half_h2h: 4, half_spread: 5, half_total: 6
+    };
+
+    validMarkets.sort((a, b) => {
+      if (a.line_index !== b.line_index) {
+        return a.line_index - b.line_index;
+      }
+      const priorityA = marketPriority[a.market] || 99;
+      const priorityB = marketPriority[b.market] || 99;
+      return priorityA - priorityB;
+    });
+
     return {
       source_match_id:
         match.getAttribute("data-match-id") ||
         match.getAttribute("data-id") ||
         match.id ||
+        match.querySelector("[data-match-id]")?.getAttribute("data-match-id") ||
         null,
       league: findLeague(match),
       home: teams[0],
@@ -336,7 +400,7 @@
       play_count: text(match, ".play-count"),
       commence_time: scheduledTime(match) || null,
       captured_at: new Date().toISOString(),
-      markets
+      markets: validMarkets // 使用处理后的 validMarkets
     };
   }
 

@@ -942,9 +942,9 @@
       };
       if (domOddsPanel?.available && Array.isArray(domOddsPanel.panels)) {
         event.odds = {
+          ...event.odds, // 增量保留列表页捕抓到的 current、coverage 等结构
           source: "leisu_detail_odd_panel",
-          detail_page: domOddsPanel,
-          list_snapshot_removed: true
+          detail_page: domOddsPanel
         };
       } else if (event.odds) {
         event.odds.source = "leisu_live_list_fallback";
@@ -1855,4 +1855,25 @@
   });
   selectionObserver.observe(document.documentElement, { childList: true, subtree: true });
   showStatus("等待导出：默认最多10场，也可手动选择指定比赛。");
+
+  // background.js 末尾添加
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    // 清理 pendingLiveApi 中关联的 Tab
+    for (const [matchId, pending] of pendingLiveApi.entries()) {
+      if (pending.tabId === tabId) {
+        finishLiveApi(matchId, "tab_closed_by_user");
+      }
+    }
+    // 清理 pendingDetails 中关联的 Tab
+    for (const [matchId, pending] of pendingDetails.entries()) {
+      if (pending.tabId === tabId) {
+        clearTimeout(pending.timer);
+        pendingDetails.delete(matchId);
+        pending.resolve({
+          available: false,
+          reason: "tab_closed_by_user"
+        });
+      }
+    }
+  });
 })();
