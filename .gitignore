@@ -1,0 +1,4 @@
+node_modules/
+导出结果/
+*.har
+*.tsv

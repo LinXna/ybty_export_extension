@@ -299,6 +299,10 @@
 
     // 2. 兜底逻辑：若选择器未抓到，直接从卡片文本中匹配中场/半场关键字或状态节点
     const fullText = clean(match.textContent);
+    const preStartNode = match.querySelector(
+      ".no-start, [class~='no-start'], [class*='no-start']"
+    );
+    const preStartText = clean(preStartNode?.textContent || "");
     if (!rawClock) {
       const stageMatch = fullText.match(/(中场休息|中场|半场|HT|加时)/i);
       if (stageMatch) {
@@ -399,6 +403,7 @@
       countdown: /后开赛/.test(rawClock) ? rawClock : null,
       play_count: text(match, ".play-count"),
       commence_time: scheduledTime(match) || null,
+      _pre_start_text: preStartText || null,
       captured_at: new Date().toISOString(),
       markets: validMarkets // 使用处理后的 validMarkets
     };
@@ -452,8 +457,21 @@
 
   function isLiveMatch(match) {
     const clock = clean(match.clock || match.clock_status || "");
-    // 扩充对中场休息、半场、HT、休息等状态文本的正则匹配
-    return /(?:^\d{1,3}:\d{2}$|\d{1,3}\s*['′]|中场|半场|HT|休息|加时|完场)/i.test(clock);
+    // YBTY 赛前卡片有明确的 no-start 容器，且可能显示日期、HH:MM、
+    // “N分钟后开赛”或“即将开赛”。这些状态必须优先判定为赛前。
+    const preStartText = clean(match._pre_start_text || "");
+    const hasPreStartMarker =
+      /(?:分钟后开赛|即将开赛|\d{1,2}月\d{1,2}日)/i.test(preStartText) ||
+      /(?:分钟后开赛|即将开赛|\d{1,2}月\d{1,2}日)/i.test(clock);
+    if (hasPreStartMarker) return false;
+    // 赛前比赛的开赛时间通常也会落入 .match-time，形如 20:30。
+    // 不能把所有 HH:MM 都当成滚球时钟，否则赛前导出会被全部过滤。
+    // 真正的滚球时钟优先来自 timer/status 节点，或包含分钟符号/比赛阶段文字。
+    const hasLivePhase = /中场|半场|HT|休息|加时|完场|暂停|进行中|live|in[ -]?play/i.test(clock);
+    const hasMinuteMark = /^\d{1,3}\s*['′]/.test(clock);
+    const hasClock = /^\d{1,3}:\d{2}$/.test(clock);
+    const hasKickoffTime = Boolean(match.commence_time && clean(match.commence_time) === clock);
+    return hasLivePhase || hasMinuteMark || (hasClock && !hasKickoffTime);
   }
 
   function downloadJson(matches, mode, context, summary) {

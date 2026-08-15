@@ -1,8 +1,32 @@
 (() => {
   "use strict";
+  window.__codexLeisuDetailBridgeLoaded = true;
 
   const matchId = String(location.pathname.match(/detail-(\d+)/)?.[1] || "");
   if (!matchId) return;
+  const sendRuntimeMessage = (message) => {
+    try {
+      chrome.runtime.sendMessage(message);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const reportBridgeStatus = (phase = "status", error = null) => {
+    sendRuntimeMessage({
+        type: "CODEX_LEISU_DETAIL_BRIDGE_STATUS",
+        match_id: matchId,
+        status: {
+          phase,
+          ready_state: document.readyState,
+          href: location.href,
+          body_length: document.body ? document.body.innerText.length : 0,
+          body_preview: document.body ? document.body.innerText.slice(0, 500) : "",
+          error: error ? String(error?.stack || error?.message || error) : null
+        }
+      });
+  };
+  reportBridgeStatus();
   const clean = (value) => String(value || "").replace(/\s+/g, " ").trim();
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const visible = (node) => {
@@ -10,7 +34,7 @@
     const rect = node.getBoundingClientRect();
     return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
   };
-  const sendDom = (name, body) => chrome.runtime.sendMessage({
+  const sendDom = (name, body) => sendRuntimeMessage({
     type: "CODEX_LEISU_DETAIL_API_RESPONSE",
     match_id: matchId,
     url: `dom:${name}`,
@@ -21,17 +45,26 @@
       body: { captured_at: Date.now(), ...body }
     }
   });
-  const activateNav = async (index, expectedText) => {
-    const items = [...document.querySelectorAll(
-      "div.broadcast-match ul.nav_btn_area > li"
-    )];
-    const target = items[index];
+  const activateNav = async (expectedText) => {
+    const scopedItems = [...document.querySelectorAll("div.broadcast-match ul.nav_btn_area > li")];
+    const items = scopedItems.length
+      ? scopedItems
+      : [...document.querySelectorAll("li")].filter(visible);
+    const target = items.find((item) => clean(item.textContent).includes(expectedText));
     if (!target) return false;
-    const label = clean(target.textContent);
-    if (expectedText && !label.includes(expectedText)) return false;
-    target.click();
-    await wait(450);
-    return true;
+    try {
+      const clickable = target.closest("li") || target;
+      // 雷速详情页的 Vue 标签在部分版本只对完整鼠标事件链触发数据请求。
+      // 单独调用 click() 可能只改变视觉状态，不触发 match_analysis。
+      for (const type of ["pointerdown", "mousedown", "pointerup", "mouseup"]) {
+        clickable.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+      }
+      clickable.click();
+      await Promise.race([wait(450), wait(1500)]);
+      return true;
+    } catch {
+      return false;
+    }
   };
   const candidates = () => [...document.querySelectorAll("button,a,li,div,span")].filter(visible);
   const clickText = async (label, root = document) => {
@@ -116,29 +149,30 @@
       });
       return;
     }
-    const entries = [...liveRoot.querySelectorAll("li,p,tr,article,section,div")]
+    const liEntries = [...liveRoot.querySelectorAll("li")]
       .filter(visible)
       .filter((node) => !isChatNode(node))
-      .map((node) => clean(node.innerText || node.textContent))
-      .filter((text) => text.length >= 3 && text.length <= 280 && eventPattern.test(text))
-      .filter((text) => !text.includes("图例说明"))
-      .filter((text) => !/^(?:越位|进攻|换人|任意球|半场比分|球门球|伤停补时|危险进攻)(?:\s+(?:越位|进攻|换人|任意球|半场比分|球门球|伤停补时|危险进攻)){3,}$/.test(text))
-      .filter((text) => !/^角球\s+进球\s+点球\s+控球率/.test(text))
-      .filter((text) => !/角球.*进球.*点球.*控球率.*换人.*危险进攻/.test(text))
-      .filter((text) => !/^\d+\(\d+\)\s*射门\(射正\)/.test(text))
-      .filter((text) => !/^(?:\d{1,3}'\s*)+(?:HT\s*)?(?:\d{1,3}'\s*)*$/.test(text))
-      .filter((text) => !/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}$/.test(text))
-      .filter((text) => !/^Lv\d+\s/i.test(text))
-      .filter((text) => !/^\S+\s+\S+\s+90'\s+75'\s+60'\s+HT/.test(text))
-      .filter((text) => !/^\S+\s+(?:一月|二月|三月|四月|五月|六月|七月|八月|九月|十月|十一月|十二月)\s+\d{4}\//.test(text))
-      .filter((text) => !/^\d{4}\/\d{2}\/\d{2}.*开赛.*天气/.test(text));
+      .map((node) => {
+        const time = clean(node.querySelector(".time")?.textContent || "");
+        const content = clean(
+          node.querySelector(".vs-content p, .vs-content")?.textContent ||
+          node.querySelector("p")?.textContent ||
+          node.textContent
+        );
+        return time && content ? `${time} - ${content}` : content;
+      })
+      .filter((text) => text.length >= 3 && text.length <= 280 && eventPattern.test(text));
+    // 文字事件统一从标准 li 事件节点读取，确保保留 .time 与 .vs-content 的对应关系。
+    const entries = liEntries;
     const uniqueEntries = [...new Set(entries)].filter(
       (text, index, all) => !all.some(
         (other, otherIndex) =>
           otherIndex !== index &&
           other.length >= 8 &&
           other.length < text.length &&
-          text.includes(other)
+          text.includes(other) &&
+          // 带有 DOM .time 的完整事件优先保留，不能被无时间的短文本淘汰。
+          !/^\d{1,3}(?:\+\d{1,2})?\s*['′]\s*-/.test(other)
       )
     );
     sendDom("text-live", {
@@ -196,10 +230,10 @@
   }
 
   async function captureDataAnalysis() {
-    const opened = await activateNav(2, "数据分析");
+    const opened = await activateNav("\u6570\u636e\u5206\u6790");
     if (opened) await wait(500);
     const output = {
-      available: opened || ["近期战绩", "进球分布", "走势", "联赛积分"].some((label) => sectionFor(label)),
+      available: opened || ["\u8fd1\u671f\u6218\u7ee9", "\u8fdb\u7403\u5206\u5e03", "\u8d70\u52bf", "\u8054\u8d5b\u79ef\u5206"].some((label) => sectionFor(label)),
       recent_form: [],
       recent_form_status: "not_captured",
       goal_distribution: null,
@@ -267,16 +301,32 @@
   }
 
   async function run() {
-    for (let attempt = 0; attempt < 16; attempt += 1) {
-      if (document.body && clean(document.body.innerText).length > 30) break;
-      await wait(250);
+    reportBridgeStatus("run_start");
+    try {
+      for (let attempt = 0; attempt < 16; attempt += 1) {
+        if (document.body && clean(document.body.innerText).length > 30) break;
+        await wait(250);
+      }
+      reportBridgeStatus("before_text_nav");
+      await Promise.race([
+        activateNav("\u6587\u5b57\u76f4\u64ad"),
+        wait(2000)
+      ]);
+      reportBridgeStatus("after_text_nav");
+      await wait(450);
+      reportBridgeStatus("before_text_capture");
+      captureTextLive();
+      captureOddPanels();
+      reportBridgeStatus("before_analysis");
+      await Promise.race([
+        captureDataAnalysis(),
+        wait(8000)
+      ]);
+      captureOddPanels();
+      reportBridgeStatus("run_complete");
+    } catch (error) {
+      reportBridgeStatus("run_error", error);
     }
-    await activateNav(0, "文字直播");
-    await wait(450);
-    captureTextLive();
-    captureOddPanels();
-    await captureDataAnalysis();
-    captureOddPanels();
   }
 
   if (document.readyState === "loading") {
@@ -294,12 +344,20 @@
     ) {
       return;
     }
-    chrome.runtime.sendMessage({
-      type: "CODEX_LEISU_DETAIL_API_RESPONSE",
-      match_id: String(event.data.match_id || ""),
-      url: event.data.url,
-      status: event.data.status,
-      data: event.data.data
+    sendRuntimeMessage({
+        type: "CODEX_LEISU_DETAIL_API_RESPONSE",
+        match_id: String(event.data.match_id || ""),
+        url: event.data.url,
+        status: event.data.status,
+        data: event.data.data
+      });
+  });
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin || event.source !== window || event.data?.source !== "codex-runtime-snapshot") return;
+    sendRuntimeMessage({
+      type: "CODEX_LEISU_RUNTIME_SNAPSHOT",
+      match_id: matchId,
+      snapshot: event.data
     });
   });
 })();

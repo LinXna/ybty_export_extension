@@ -3,6 +3,9 @@
 
   const BUTTON_ID = "codex-leisu-live-export-button";
   const PREMATCH_BUTTON_ID = "codex-leisu-prematch-export-button";
+  const SCRIPT_BUTTON_ID = "codex-leisu-script-export-button";
+  const INTERFACE_DIAGNOSTIC_BUTTON_ID = "codex-leisu-interface-diagnostic-button";
+  const FULL_CAPTURE_BUTTON_ID = "codex-leisu-full-capture-button";
   const HISTORY_KEY = "codex_leisu_live_history_v1";
   const STATUS_ID = "codex-leisu-export-status";
   const LIMIT_ID = "codex-leisu-export-limit";
@@ -50,6 +53,75 @@
     }
     node.style.background = error ? "#a61b1b" : "#162238";
     node.textContent = message;
+  }
+
+  function normalizeCardStatistics(event) {
+    event._statistics ||= {};
+    for (const key of ["yellow_cards", "red_cards"]) {
+      const value = event._statistics[key];
+      if (!value || typeof value !== "object") {
+        event._statistics[key] = { home: 0, away: 0 };
+        continue;
+      }
+      event._statistics[key] = {
+        home: Number.isFinite(Number(value.home)) ? Number(value.home) : 0,
+        away: Number.isFinite(Number(value.away)) ? Number(value.away) : 0
+      };
+    }
+  }
+
+  function sanitizeLineups(event) {
+    const lineup = event._lineups || {};
+    const homeStarters = Array.isArray(lineup.home?.starters) ? lineup.home.starters : [];
+    const awayStarters = Array.isArray(lineup.away?.starters) ? lineup.away.starters : [];
+    const formal = homeStarters.length > 0 && awayStarters.length > 0;
+    if (!formal) {
+      event._lineups = {
+        available: false,
+        source: lineup.source || null,
+        home: { players: [], starters: [], substitutes: [] },
+        away: { players: [], starters: [], substitutes: [] },
+        entries: [],
+        status: "not_obtained"
+      };
+    }
+    return formal;
+  }
+
+  function buildTimedLiveEvents(entries) {
+    const output = [];
+    let pendingMinute = null;
+    for (const raw of Array.isArray(entries) ? entries : []) {
+      let text = clean(raw).replace(/^[-–—]\s*/, "");
+      if (!text) continue;
+      const clockOnly = text.match(/^(\d{1,3}(?:\+\d{1,2})?)\s*['′]$/);
+      if (clockOnly) {
+        pendingMinute = clockOnly[1];
+        continue;
+      }
+      const embedded = text.match(/(?:^|\D)(\d{1,3}(?:\+\d{1,2})?)\s*(?:['′]|分钟)/);
+      const minute = embedded?.[1] || pendingMinute;
+      // 文本本身已有分钟时，先移除该分钟，避免 display 重复输出。
+      const normalizedText = minute
+        ? text
+            .replace(new RegExp(`^${minute}\\s*['′]\\s*[-–—]?\\s*`, "i"), "")
+            .replace(new RegExp(`^${minute}\\s*分钟[，,]?\\s*`, "i"), "")
+            .trim()
+        : text;
+      const displayText = normalizedText
+        .replace(/^[-–—]\s*/, "")
+        .replace(/^Goal!\s*[-–—]?\s*/i, "")
+        .trim();
+      const display = minute ? `${minute}'- ${displayText}` : displayText;
+      output.push({
+        minute: minute || null,
+        text: displayText,
+        raw_text: clean(raw),
+        display
+      });
+      pendingMinute = null;
+    }
+    return output;
   }
 
   function standaloneNumbers(value) {
@@ -336,49 +408,7 @@
     return parseOddsPanels(row, dynamicOddsPanels());
   }
 
-  async function enrichOddsDetail(event, index, total) {
-    button.textContent = `读取赔率详情 ${index + 1}/${total}`;
-    try {
-      event.odds.detail = await new Promise((resolve) => {
-        chrome.runtime.sendMessage(
-          {
-            type: "CODEX_COLLECT_ODDS_DETAIL",
-            match_id: event.id
-          },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              resolve({
-                available: false,
-                reason: chrome.runtime.lastError.message
-              });
-              return;
-            }
-            resolve(response || { available: false, reason: "empty_response" });
-          }
-        );
-      });
-    } catch (error) {
-      event.odds.detail = {
-        available: false,
-        reason: error.message || "detail_failed"
-      };
-    }
-  }
 
-  async function enrichAllOddsDetails(events) {
-    const oddsConcurrency = 2;
-    for (let index = 0; index < events.length; index += oddsConcurrency) {
-      const batch = events.slice(index, index + oddsConcurrency);
-      await Promise.all(
-        batch.map((event, offset) =>
-          enrichOddsDetail(event, index + offset, events.length)
-        )
-      );
-      if (index + oddsConcurrency < events.length) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-      }
-    }
-  }
 
   async function enrichAllStatistics(events) {
     const statisticsConcurrency = 6;
@@ -513,46 +543,7 @@
     };
   }
 
-  function metricPair(text, label) {
-    const match = text.match(
-      new RegExp(`(?:^|\\s)(\\d+(?:\\.\\d+)?)\\s*${label}\\s*(\\d+(?:\\.\\d+)?)(?=\\s|$)`)
-    );
-    return match ? { home: Number(match[1]), away: Number(match[2]) } : null;
-  }
 
-  function parseDetail(documentNode) {
-    const text = clean(documentNode.body?.innerText);
-    const shotMatch = text.match(
-      /(?:^|\s)(\d+)\((\d+)\)\s*射门\(射正\)\s*(\d+)\((\d+)\)(?=\s|$)/
-    );
-    const possessionMatch = text.match(
-      /(?:^|\s)(\d+(?:\.\d+)?)%\s*控球率\s*(\d+(?:\.\d+)?)%/
-    );
-    const statistics = {};
-    if (shotMatch) {
-      statistics.shots = {
-        home: Number(shotMatch[1]),
-        away: Number(shotMatch[3])
-      };
-      statistics.shots_on_target = {
-        home: Number(shotMatch[2]),
-        away: Number(shotMatch[4])
-      };
-    }
-    if (possessionMatch) {
-      statistics.possession = {
-        home: Number(possessionMatch[1]),
-        away: Number(possessionMatch[2])
-      };
-    }
-    const attacks = metricPair(text, "进攻");
-    const dangerous = metricPair(text, "危险进攻");
-    const penalties = metricPair(text, "点球");
-    if (attacks) statistics.attacks = attacks;
-    if (dangerous) statistics.dangerous_attacks = dangerous;
-    if (penalties) statistics.penalties = penalties;
-    return statistics;
-  }
 
   const NAMI_STAT_TYPES = {
     2: "corners",
@@ -886,12 +877,13 @@
     });
   }
 
-  async function collectDetailApi(event) {
+  async function collectDetailApi(event, requireInterfaceRuntime = false) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
         {
           type: "CODEX_COLLECT_LEISU_DETAIL_API",
-          match_id: event.id
+          match_id: event.id,
+          require_interface_runtime: requireInterfaceRuntime
         },
         (response) => {
           if (chrome.runtime.lastError) {
@@ -912,17 +904,18 @@
     });
   }
 
-  async function enrichDetailApi(event, index, total) {
-    button.textContent = `事件接口 ${index + 1}/${total}`;
+  // Legacy detail export: DOM-only fields. Interface migration is intentionally excluded.
+  async function enrichLegacyDetailDom(event, index, total) {
     try {
       const result = await collectDetailApi(event);
-      event._detail_api_discovery = result;
-      const domLive = result?.responses?.["dom:text-live"]?.data?.body;
-      const domAnalysis = result?.responses?.["dom:data-analysis"]?.data?.body;
-      const domOddsPanel = result?.responses?.["dom:odd-panel"]?.data?.body;
-      if (Array.isArray(domLive?.entries) && domLive.entries.length) {
+      const responses = result?.responses || {};
+      const domLive = responses["dom:text-live"]?.data?.body;
+      const domAnalysis = responses["dom:data-analysis"]?.data?.body;
+      const domOdds = responses["dom:odd-panel"]?.data?.body;
+
+      if (Array.isArray(domLive?.entries)) {
         event._live_text = {
-          available: true,
+          available: domLive.entries.length > 0,
           source: "leisu_detail_dom",
           source_selector: domLive.source_selector || null,
           source_type: domLive.source_type || "official_text_live_filtered",
@@ -935,58 +928,38 @@
         available: false,
         reason: "detail_data_analysis_not_exposed"
       };
-      event._detail_odds_panel = domOddsPanel || {
+      event._detail_odds_panel = domOdds || {
         available: false,
         reason: "detail_odd_panel_not_exposed",
         panels: []
       };
-      if (domOddsPanel?.available && Array.isArray(domOddsPanel.panels)) {
+      if (domOdds?.available && Array.isArray(domOdds.panels)) {
         event.odds = {
-          ...event.odds, // 增量保留列表页捕抓到的 current、coverage 等结构
           source: "leisu_detail_odd_panel",
-          detail_page: domOddsPanel
+          detail_page: domOdds
         };
-      } else if (event.odds) {
-        event.odds.source = "leisu_live_list_fallback";
       }
-      event._detail_api_discovery = {
-        available: Boolean(result?.available),
-        reason: result?.reason || null,
-        captured_at: result?.captured_at || null,
-        response_summary: Object.fromEntries(
-          Object.entries(result?.responses || {}).map(([url, response]) => [
-            url,
-            {
-              status: response?.status || 0,
-              encoding: response?.data?.encoding || null,
-              content_type: response?.data?.content_type || null,
-              size: typeof response?.data?.body === "string"
-                ? response.data.body.length
-                : JSON.stringify(response?.data?.body || {}).length
-            }
-          ])
-        )
+      const statisticsAvailable = Boolean(event._statistics && Object.keys(event._statistics).length);
+      const eventsAvailable = Boolean(event._live_text?.available);
+      event.detail_available = statisticsAvailable && eventsAvailable;
+      event.detail_components = {
+        ...(event.detail_components || {}),
+        events: eventsAvailable,
+        historical_analysis: Boolean(event._historical_analysis?.available),
+        odds_detail: Boolean(event._detail_odds_panel?.available)
       };
     } catch (error) {
-      event._detail_api_discovery = {
-        available: false,
-        reason: error.message || "detail_api_failed",
-        responses: {}
-      };
+      event.detail_available = false;
     }
   }
 
-  async function enrichAllDetailApis(events) {
-    // Each selected match may open at most one background detail page.
-    // The simultaneous page count is controlled by the page input.
+  async function enrichAllLegacyDetailDom(events) {
     const concurrency = Math.min(detailConcurrency(), Math.max(1, events.length));
     for (let index = 0; index < events.length; index += concurrency) {
       const batch = events.slice(index, index + concurrency);
-      await Promise.all(
-        batch.map((event, offset) =>
-          enrichDetailApi(event, index + offset, events.length)
-        )
-      );
+      await Promise.all(batch.map((event, offset) =>
+        enrichLegacyDetailDom(event, index + offset, events.length)
+      ));
     }
   }
 
@@ -995,23 +968,6 @@
     try {
       const apiResult = await collectStatisticsApi(event);
       const parsed = parseNamiStatistics(apiResult);
-      event._statistics_api = {
-        available: apiResult.available,
-        complete: apiResult.complete,
-        reason: apiResult.reason || null,
-        source: apiResult.source || null,
-        endpoints: Object.fromEntries(
-          Object.entries(parsed.rawByEndpoint).map(([name, payload]) => [
-            name,
-            {
-              status: payload?.status || 0,
-              encoding: payload?.data?.encoding || "json",
-              size: payload?.data?.body?.length || 0
-            }
-          ])
-        )
-      };
-      event._detail_context = parsed.context;
       event._weather = {
         available: parsed.context.coverage.weather,
         text: parsed.context.weather_text
@@ -1061,32 +1017,23 @@
         : [];
       event._lineups = {
         available: hasMatchLineup,
-        source: hasMatchLineup ? "namitiyu_api_match_lineup" : "namitiyu_api_squad",
+        source: hasMatchLineup ? "namitiyu_api_match_lineup" : "not_obtained",
         home: {
           team: event.homeTeam?.name || null,
-          players: hasMatchLineup ? homeStructured : squadHomePlayers,
+          players: hasMatchLineup ? homeStructured : [],
           starters: homeStructured.filter((item) => item.starter),
           substitutes: homeStructured.filter((item) => item.substitute)
         },
         away: {
           team: event.awayTeam?.name || null,
-          players: hasMatchLineup ? awayStructured : squadAwayPlayers,
+          players: hasMatchLineup ? awayStructured : [],
           starters: awayStructured.filter((item) => item.starter),
           substitutes: awayStructured.filter((item) => item.substitute)
         },
-        entries: parsed.context.lineup_text,
+        entries: hasMatchLineup ? parsed.context.lineup_text : [],
         status: hasMatchLineup
           ? "home_away_mapped_role_mapping_pending"
-          : squadHomePlayers.length || squadAwayPlayers.length
-            ? "squad_only_no_confirmed_match_lineup"
-            : "not_published_or_not_exposed"
-      };
-      event._player_candidates = {
-        available: parsed.context.coverage.player_candidates,
-        names: parsed.context.player_candidates,
-        status: parsed.context.coverage.player_candidates
-          ? "api_players_detected_needs_home_away_role_mapping"
-          : "not_published_or_not_exposed"
+          : "not_obtained"
       };
       if (Object.keys(parsed.statistics).length) {
         event._statistics = parsed.statistics;
@@ -1094,57 +1041,11 @@
         return;
       }
     } catch (error) {
-      event._statistics_api = {
-        available: false,
-        reason: error.message || "api_failed"
-      };
     }
     event._statistics ||= {};
     event._statistics_source = "namitiyu_api_unavailable";
   }
 
-  async function enrichDetail(event, index, total) {
-    button.textContent = `读取详情 ${index + 1}/${total}`;
-    const frame = document.createElement("iframe");
-    frame.src = event.detail_url;
-    frame.style.cssText =
-      "position:fixed;width:2px;height:2px;left:-20px;bottom:-20px;opacity:.01;border:0";
-    document.documentElement.appendChild(frame);
-    try {
-      await new Promise((resolve) => {
-        const timeout = setTimeout(resolve, 4000);
-        frame.addEventListener(
-          "load",
-          () => {
-            const started = Date.now();
-            const poll = setInterval(() => {
-              try {
-                const bodyText = frame.contentDocument?.body?.innerText || "";
-                if (
-                  bodyText.includes("射门(射正)") ||
-                  Date.now() - started > 3000
-                ) {
-                  clearInterval(poll);
-                  clearTimeout(timeout);
-                  resolve();
-                }
-              } catch {
-                clearInterval(poll);
-                clearTimeout(timeout);
-                resolve();
-              }
-            }, 200);
-          },
-          { once: true }
-        );
-      });
-      event._statistics = parseDetail(frame.contentDocument);
-    } catch {
-      event._statistics = {};
-    } finally {
-      frame.remove();
-    }
-  }
 
   function loadHistory() {
     try {
@@ -1529,12 +1430,12 @@
         }
         await Promise.all([
           enrichAllStatistics(liveEvents),
-          enrichAllDetailApis(liveEvents)
+          enrichAllLegacyDetailDom(liveEvents)
         ]);
       } else if (mode === "prematch" && shouldDownload) {
         await Promise.all([
           enrichAllStatistics(detailEvents),
-          enrichAllDetailApis(detailEvents)
+          enrichAllLegacyDetailDom(detailEvents)
         ]);
       }
       const now = Date.now();
@@ -1544,10 +1445,15 @@
       if (shouldDownload) {
         const exportEvents = selectedEvents;
         for (const event of selectedEvents) {
+          normalizeCardStatistics(event);
+          sanitizeLineups(event);
           const statisticsAvailable = Boolean(
             event._statistics && Object.keys(event._statistics).length
           );
           const eventEntries = event._live_text?.entries || [];
+          if (event._live_text) {
+            event._live_text.timed_entries = buildTimedLiveEvents(eventEntries);
+          }
           const eventsAvailable = eventEntries.length > 0;
           const lineupAvailable = Boolean(event._lineups?.available);
           const weatherAvailable = Boolean(event._weather?.available);
@@ -1557,7 +1463,7 @@
           const historicalAnalysisAvailable = Boolean(event._historical_analysis?.available);
           event.detail_available = mode === "live"
             ? statisticsAvailable && eventsAvailable
-            : Boolean(event._detail_api_discovery?.available);
+            : false;
           event.detail_components = {
             statistics: statisticsAvailable,
             events: eventsAvailable,
@@ -1636,6 +1542,7 @@
               available: eventsAvailable,
               count: eventEntries.length,
               entries: eventEntries,
+              timed_entries: buildTimedLiveEvents(eventEntries),
               source_type: event._live_text?.source_type || "unclassified_text_source",
               source_selector: event._live_text?.source_selector || null,
               chat_content_excluded: event._live_text?.chat_content_excluded === true,
@@ -1653,9 +1560,7 @@
             },
             odds: {
               source: event.odds?.source || null,
-              current_available: Boolean(
-                event._detail_odds_panel?.available || event.odds?.current
-              ),
+              current_available: Boolean(event.odds?.detail_page?.available),
               detail_available: oddsDetailAvailable,
               detail_page_panels: event._detail_odds_panel?.panels || [],
               opening_current_comparison_available: Boolean(
@@ -1731,6 +1636,291 @@
     collect("live", shouldDownload, includeOddsDetails);
   const exportLive = () => collectLive(true, true);
   const exportPrematch = () => collect("prematch", true);
+  function collectScriptCandidates() {
+    const seen = new Map();
+    for (const mode of ["live", "prematch"]) {
+      for (const row of candidateRows(mode)) {
+        const event = parseRow(row, mode);
+        if (event?.id) seen.set(String(event.id), event);
+      }
+    }
+    return [...seen.values()];
+  }
+  function initialDetailPayload(detail) {
+    const body = detail?.responses?.["payload:initial-detail"]?.data?.body;
+    return body?.decoded && typeof body.decoded === "object" ? body.decoded : null;
+  }
+  function normalizeInitialPayloadTextLive(detail) {
+    const source = initialDetailPayload(detail)?.match_detail?.tlive;
+    if (!Array.isArray(source)) return [];
+    return source.map((item) => ({
+      main: item?.main ?? null,
+      type: item?.type ?? null,
+      position: item?.position ?? null,
+      time: item?.time ?? null,
+      data: item?.data ?? null
+    })).filter((item) => item.data != null || item.time != null);
+  }
+  function normalizeInitialPayloadOdds(detail) {
+    const root = initialDetailPayload(detail);
+    const odds = root?.top_data?.match_odds || root?.match_odds;
+    if (!odds) return null;
+    // 解码后的当前结构使用 cid=2；兼容部分前端包暴露为 type=2 的同一公司标识。
+    const select = (name) => (odds[name] || []).find((item) => Number(item?.cid ?? item?.type) === 2) || null;
+    const values = (item, phase) => {
+      if (!item) return null;
+      if (phase === "initial") return Array.isArray(item.f) ? item.f : null;
+      const nested = phase === "pregame" ? item.n : item.r;
+      return Array.isArray(nested?.[0]) ? nested[0] : null;
+    };
+    const market = (item, names) => {
+      const out = {};
+      for (const phase of ["initial", "pregame", "live"]) {
+        const row = values(item, phase);
+        out[phase] = row ? Object.fromEntries(names.map((name, index) => [name, row[index] ?? null])) : null;
+      }
+      return out;
+    };
+    const asia = select("asia");
+    const eu = select("eu");
+    const bs = select("bs");
+    const corner = select("corner");
+    if (![asia, eu, bs, corner].some(Boolean)) return null;
+    return {
+      source: "initial_detail_payload.match_odds",
+      company_id: 2,
+      company_name: odds.coop?.["2"]?.name ?? null,
+      phase_mapping: { initial: "f", pregame: "n[0]", live: "r[0]" },
+      markets: {
+        asian_handicap: { label: "让球", ...market(asia, ["home", "line", "away"]) },
+        match_winner: { label: "胜负", ...market(eu, ["home", "draw", "away"]) },
+        total_goals: { label: "总进球", ...market(bs, ["over", "line", "under"]) },
+        corners: { label: "角球", ...market(corner, ["over", "line", "under"]) }
+      }
+    };
+  }
+  function parseDirectJsonResponse(detail, endpointPattern) {
+    for (const [url, response] of Object.entries(detail?.responses || {})) {
+      if (!endpointPattern.test(url)) continue;
+      const plain = response?.data?.decrypted?.body;
+      if (typeof plain !== "string") continue;
+      try { return JSON.parse(plain); } catch { }
+    }
+    return null;
+  }
+  function normalizeDirectLineup(detail) {
+    const source = parseDirectJsonResponse(detail, /match_lineup/i);
+    if (!source) return null;
+    const playerMap = new Map((source.players || []).map((item) => [String(item.id), item]));
+    const normalizePlayer = (item) => {
+      const profile = playerMap.get(String(item?.player_id ?? item?.id)) || {};
+      return {
+        player_id: item?.player_id ?? item?.id ?? profile.id ?? null,
+        team_id: item?.team_id ?? profile.team_id ?? null,
+        name: profile.name ?? item?.name ?? item?.player_name ?? null,
+        status: item?.status ?? null,
+        starter: item?.status === 1,
+        captain: item?.captain ?? 0,
+        shirt_number: item?.shirt_number ?? profile.shirt_number ?? null,
+        position: profile.position ?? item?.position_name ?? null,
+        position_name: item?.position_name ?? profile.position ?? null,
+        position_code: profile.position_en ?? null,
+        position_number: item?.position_num ?? null,
+        x: item?.x ?? null,
+        y: item?.y ?? null,
+        rating: item?.rating ?? null,
+        best_player: item?.is_best === 1,
+        age: profile.age ?? null,
+        height: profile.height ?? null,
+        market_value: profile.market_value ?? null,
+        market_value_text: profile.market_value_unit ?? null,
+        incidents: Array.isArray(item?.incidents) ? item.incidents : []
+      };
+    };
+    const normalizeManager = (item) => item ? {
+      id: item.id ?? null,
+      team_id: item.team_id ?? null,
+      name: item.name ?? null,
+      role: item.type_name ?? null
+    } : null;
+    return {
+      source: "match_lineup",
+      confirmed: source.confirmed ?? null,
+      venue: source.venue ? {
+        id: source.venue.id ?? null,
+        name: source.venue.name ?? null,
+        capacity: source.venue.capacity ?? null,
+        city: source.venue.city ?? null,
+        country: source.venue.country ?? null
+      } : null,
+      referee: source.referee ? {
+        id: source.referee.id ?? null,
+        name: source.referee.name ?? null,
+        age: source.referee.age ?? null,
+        country_name: source.referee.country_name ?? null
+      } : null,
+      home_formation: source.home_formation ?? null,
+      away_formation: source.away_formation ?? null,
+      home_manager: normalizeManager(source.home_manager),
+      away_manager: normalizeManager(source.away_manager),
+      home: (source.home || []).map(normalizePlayer),
+      away: (source.away || []).map(normalizePlayer),
+      home_injuries: (source.home_injury || []).map(normalizePlayer),
+      away_injuries: (source.away_injury || []).map(normalizePlayer),
+      home_market_value: source.home_market_value ?? null,
+      away_market_value: source.away_market_value ?? null,
+      home_average_age: source.home_avg_age ?? null,
+      away_average_age: source.away_avg_age ?? null,
+      has_coordinates: source.has_coordinates ?? null,
+      has_stats: source.has_stats ?? null
+    };
+  }
+  async function exportInterfaceData(includeEvidence = false) {
+    if (collecting) return;
+    const events = collectScriptCandidates().filter((event) => event.id);
+    const ids = [...(selectedEventIds.size ? events.filter((e) => selectedEventIds.has(String(e.id))) : events.slice(0, exportLimit()))].map((e) => String(e.id));
+    if (!ids.length) return showStatus("没有找到可导出的比赛ID", true);
+    showStatus(`正在获取${ids.length}场比赛的详情页接口...`);
+    collecting = true;
+    const results = [];
+    (async () => {
+      try {
+        for (const event of events.filter((item) => ids.includes(String(item.id)))) {
+          const statistics = await collectStatisticsApi(event);
+          const detail = await collectDetailApi(event, true);
+          const decoded = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({ type: "CODEX_DECODE_INTERFACE_PAYLOADS", responses: statistics?.endpoints || {} }, (value) => {
+              resolve(chrome.runtime.lastError ? {} : (value?.decoded_interface || {}));
+            });
+          });
+          const analysisFields = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({ type: "CODEX_BUILD_MATCH_ANALYSIS_FIELDS", responses: detail?.responses || {} }, (value) => {
+              resolve(chrome.runtime.lastError ? {} : (value || {}));
+            });
+          });
+          const staticDetail = decoded?.d?.data || null;
+          const liveDetail = decoded?.vd?.data || null;
+          const rawStats = liveDetail?.stats?.itemsList || [];
+          const statByCode = Object.fromEntries(rawStats.map((item) => [String(item.code ?? item.type), { home: item.home, away: item.away }]));
+          const capturedTextLive = normalizeInitialPayloadTextLive(detail);
+          const lineup = normalizeDirectLineup(detail);
+          const formalOdds = normalizeInitialPayloadOdds(detail);
+          const capturedOpeningOdds = formalOdds ? {
+            source: formalOdds.source,
+            asian_handicap: formalOdds.markets?.asian_handicap?.initial || null,
+            match_winner: formalOdds.markets?.match_winner?.initial || null,
+            total_goals: formalOdds.markets?.total_goals?.initial || null,
+            corners: formalOdds.markets?.corners?.initial || null
+          } : {
+            source: null,
+            asian_handicap: null,
+            match_winner: null,
+            total_goals: null,
+            corners: null
+          };
+          const liveMatch = liveDetail ? {
+            source: "/api/v3/f/vd",
+            statistics_source: "/api/v3/f/vd",
+            match_id: liveDetail.id ?? null,
+            status_id: liveDetail.statusId ?? null,
+            home_scores: liveDetail.homeScores || null,
+            away_scores: liveDetail.awayScores || null,
+            confirmed_statistics: {
+              corners: statByCode["2"] || null,
+              yellow_cards: statByCode["3"] || null,
+              red_cards: statByCode["4"] || null,
+              attacks: statByCode["23"] || null,
+              dangerous_attacks: statByCode["24"] || null,
+              possession: statByCode["25"] || null,
+              shots_on_target: statByCode["21"] || null,
+              shots_off_target: statByCode["22"] || null
+            },
+            text_live: capturedTextLive
+          } : null;
+          const completeness = {
+            static_match: Boolean(staticDetail),
+            live_match: Boolean(liveDetail),
+            match_analysis: Boolean(analysisFields.parsed_match_analysis),
+            text_live: capturedTextLive.length > 0,
+            odds: Boolean(formalOdds),
+            recent_matches: Boolean(analysisFields.recent_matches),
+            league_standings: Boolean(analysisFields.league_standings),
+            goal_distribution: Boolean(analysisFields.goal_distribution),
+            trend_summary: Boolean(analysisFields.trend_summary),
+            lineup: Boolean(lineup)
+          };
+          results.push({
+            match_id: String(event.id),
+            available: completeness.static_match && completeness.live_match && completeness.match_analysis,
+            complete: Object.values(completeness).every(Boolean),
+            completeness,
+            formal: {
+              static_match: staticDetail,
+              live_match: liveMatch,
+              opening_odds: capturedOpeningOdds,
+              odds: formalOdds,
+              analysis_match_context: analysisFields.analysis_match_context || null,
+              head_to_head: analysisFields.head_to_head || [],
+              future_schedule: analysisFields.future_schedule || null,
+              recent_matches: analysisFields.recent_matches || { home: [], away: [] },
+              league_standings: analysisFields.league_standings || null,
+              goal_distribution: analysisFields.goal_distribution || null,
+              trend_summary: analysisFields.trend_summary || null,
+              lineup
+            }
+          });
+          if (includeEvidence) {
+            results[results.length - 1].evidence = {
+              statistics_api: statistics,
+              detail_api: detail,
+              decoded_interface: decoded,
+              parsed_match_analysis: analysisFields.parsed_match_analysis || null
+            };
+          }
+        }
+        const exportType = includeEvidence ? "leisu_interface_diagnostic" : "leisu_interface_data";
+        download({ export_version: EXPORT_VERSION, export_type: exportType, captured_at: new Date().toISOString(), results }, includeEvidence ? "interface_diagnostic" : "interface_data");
+        showStatus(`接口导出完成：成功${results.filter((item) => item.available).length}/${ids.length}场`);
+      } catch (error) {
+        showStatus(`接口导出失败：${error?.message || error}`, true);
+      } finally {
+        collecting = false;
+      }
+    })();
+  }
+  /*
+   * 雷速详情页诊断工具：仅用于雷速改版后的解密与采集回归排查。
+   * 会刷新当前详情页，并导出前端脚本、网络原始响应、运行时快照、
+   * CryptoJS 与 soring 调用记录。它不参与“滚球接口获取导出”、
+   * 不生成正式预测字段，也不用于列表页批量采集。
+   */
+  async function exportFullCurrentDetail() {
+    const matchId = String(location.pathname.match(/detail-(\d+)/i)?.[1] || "");
+    if (!matchId) return showStatus("请在雷速详情页使用此按钮", true);
+    showStatus("正在采集当前详情页运行时数据...");
+    const snapshot = await new Promise((resolve) => {
+      const onMessage = (event) => {
+        if (event.origin !== location.origin || event.source !== window || event.data?.source !== "codex-runtime-snapshot") return;
+        clearTimeout(timer); window.removeEventListener("message", onMessage); resolve(event.data);
+      };
+      const timer = setTimeout(() => { window.removeEventListener("message", onMessage); resolve(null); }, 5000);
+      window.addEventListener("message", onMessage);
+      window.postMessage({ source: "codex-runtime-snapshot-request" }, location.origin);
+    });
+    if (!snapshot) return showStatus("未获取到详情页运行时数据", true);
+    const scriptUrls = performance.getEntriesByType("resource").map((entry) => String(entry.name || ""));
+    chrome.runtime.sendMessage({ type: "CODEX_EXPORT_FULL_CURRENT_DETAIL", match_id: matchId, script_urls: scriptUrls, snapshot }, (result) => {
+      if (chrome.runtime.lastError) return showStatus(`完整采集失败：${chrome.runtime.lastError.message}`, true);
+      download(result?.package || { match_id: matchId, snapshot }, "full_detail_capture");
+      showStatus("当前详情页完整采集完成");
+    });
+  }
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message?.type === "CODEX_FULL_CAPTURE_RESULT" && message.package) {
+      download(message.package, "full_detail_capture");
+      showStatus("当前详情页完整采集完成");
+    }
+  });
 
   const button = document.createElement("button");
   button.id = BUTTON_ID;
@@ -1750,6 +1940,9 @@
     "cursor:pointer",
     "box-shadow:0 4px 16px rgba(0,0,0,.28)"
   ].join(";");
+  button.style.setProperty("display", "block", "important");
+  button.style.setProperty("visibility", "visible", "important");
+  button.style.setProperty("opacity", "1", "important");
   button.addEventListener("click", exportLive);
 
   const prematchButton = document.createElement("button");
@@ -1771,6 +1964,23 @@
     "box-shadow:0 4px 16px rgba(0,0,0,.28)"
   ].join(";");
   prematchButton.addEventListener("click", exportPrematch);
+  const scriptButton = document.createElement("button");
+  scriptButton.id = SCRIPT_BUTTON_ID;
+  scriptButton.type = "button";
+  scriptButton.textContent = "滚球接口获取导出";
+  scriptButton.style.cssText = button.style.cssText.replace("bottom:66px", "bottom:162px").replace("#1677ff", "#8e44ad");
+  scriptButton.addEventListener("click", () => exportInterfaceData(false));
+  const interfaceDiagnosticButton = document.createElement("button");
+  interfaceDiagnosticButton.id = INTERFACE_DIAGNOSTIC_BUTTON_ID;
+  interfaceDiagnosticButton.type = "button";
+  interfaceDiagnosticButton.textContent = "滚球接口诊断导出（正式+证据）";
+  interfaceDiagnosticButton.style.cssText = button.style.cssText.replace("bottom:66px", "bottom:186px").replace("#1677ff", "#6d4c41");
+  interfaceDiagnosticButton.addEventListener("click", () => exportInterfaceData(true));
+  const fullCaptureButton = document.createElement("button");
+  fullCaptureButton.id = FULL_CAPTURE_BUTTON_ID;
+  fullCaptureButton.type = "button";
+  fullCaptureButton.textContent = "诊断：完整采集当前详情页";
+  fullCaptureButton.addEventListener("click", exportFullCurrentDetail);
 
   const limitBox = document.createElement("div");
   limitBox.style.cssText = [
@@ -1792,7 +2002,7 @@
   limitInput.min = "1";
   limitInput.max = "100";
   limitInput.value = "10";
-  limitInput.style.cssText = "width:48px;padding:3px;margin:0 3px;border:0;border-radius:4px";
+  limitInput.style.cssText = "width:35px;padding:3px;margin:0 3px;border:0;border-radius:4px;box-sizing:border-box";
   limitInput.addEventListener("change", () => {
     limitInput.value = String(exportLimit());
     if (!selectedEventIds.size) showStatus(`未手动选择；本次最多导出${limitInput.value}场。`);
@@ -1807,7 +2017,7 @@
   concurrencyInput.value = "2";
   concurrencyInput.title = "同时打开的详情页数量（1-10）";
   concurrencyInput.style.cssText =
-    "width:38px;padding:3px;margin:0 3px 0 8px;border:0;border-radius:4px";
+    "width:35px;padding:3px;margin:0 3px 0 8px;border:0;border-radius:4px;box-sizing:border-box";
   concurrencyInput.addEventListener("change", () => {
     concurrencyInput.value = String(detailConcurrency());
     showStatus(`详情页并发数已设为${concurrencyInput.value}；总详情页不超过导出场数。`);
@@ -1838,17 +2048,26 @@
   ].join(";");
   selectButton.addEventListener("click", toggleSelectionMode);
 
-  if (!document.getElementById(BUTTON_ID)) {
-    document.documentElement.appendChild(button);
+  const controls = document.createElement("div");
+  controls.id = "codex-leisu-export-controls";
+  controls.style.cssText = "position:fixed;right:18px;bottom:55px;z-index:2147483647;display:flex;flex-direction:column;gap:8px;width:260px;padding:10px;border-radius:10px;background:rgba(20,30,40,.94);box-shadow:0 4px 18px rgba(0,0,0,.35)";
+  for (const node of [button, prematchButton, scriptButton, interfaceDiagnosticButton, fullCaptureButton, limitBox, selectButton]) {
+    node.style.setProperty("position", "static", "important");
+    node.style.setProperty("right", "auto", "important");
+    node.style.setProperty("bottom", "auto", "important");
+    node.style.setProperty("width", "100%", "important");
+    controls.appendChild(node);
   }
+  if (!document.getElementById("codex-leisu-export-controls")) document.documentElement.appendChild(controls);
+  /*
   if (!document.getElementById(PREMATCH_BUTTON_ID)) {
     document.documentElement.appendChild(prematchButton);
   }
-  if (!document.getElementById(LIMIT_ID)) {
-    document.documentElement.appendChild(limitBox);
-  }
-  if (!document.getElementById(SELECT_ID)) {
-    document.documentElement.appendChild(selectButton);
+  */
+  /* legacy individual mounting disabled: all controls live in the fixed container */
+  // 页面局部刷新可能移除控件；滚球按钮必须始终存在。
+  if (!document.getElementById(BUTTON_ID)) {
+    document.body?.appendChild(button);
   }
   const selectionObserver = new MutationObserver(() => {
     if (selectionMode || selectedEventIds.size) markSelectedRows();
@@ -1857,7 +2076,7 @@
   showStatus("等待导出：默认最多10场，也可手动选择指定比赛。");
 
   // background.js 末尾添加
-  chrome.tabs.onRemoved.addListener((tabId) => {
+  /* chrome.tabs.onRemoved.addListener((tabId) => {
     // 清理 pendingLiveApi 中关联的 Tab
     for (const [matchId, pending] of pendingLiveApi.entries()) {
       if (pending.tabId === tabId) {
@@ -1875,5 +2094,5 @@
         });
       }
     }
-  });
+  }); */
 })();

@@ -2,16 +2,18 @@
   "manifest_version": 3,
   "name": "YBTY盘口与雷速数据导出",
   "version": "2.8.0",
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "debugger"],
   "host_permissions": [
     "https://live.leisu.com/*",
+    "https://static.leisu.com/*",
     "https://odds.leisu.com/*",
     "https://widget.namitiyu.com/*",
     "https://tracker.namitiyu.com/*",
     "https://tracker-api.namitiyu.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "classic"
   },
   "description": "分别导出滚球和非滚球的YBTY盘口及雷速赛事数据。",
   "content_scripts": [

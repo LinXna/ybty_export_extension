@@ -1,0 +1,43 @@
+{
+  "match_id": "4614008",
+  "url": "https://live.leisu.com/detail-4614008",
+  "resources": [
+    "https://static.leisu.com/public/css/mod_live/football/detail-data-5ec9f661f8.css",
+    "https://static.leisu.com/public/css/mod_live/football/detail-a3c6429325.css",
+    "https://static.leisu.com/public/js/mod_live/vue_component/detail_animat_live-2c9ba6e6f3.js",
+    "https://static.leisu.com/public/js/mod_live/vue_component/detail_chatroom-966c574c46.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail-e425345c44.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/league-af6a868ef4.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/mixin-ae3defab18.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/recent_rank-29aea79e92.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/trend-221a7e07f9.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/distribution-b4e93413cb.js",
+    "https://zhanzhang.toutiao.com/s.gif?url=https%3A%2F%2Flive.leisu.com%2Fdetail-4614008&token=ba3f31e732f72dd2a99fa632bf24c35cf4641c3ef957e3e243775b21319a0d686ba122520b31506c5b2e14e8db7d48c84cea6a81c88a9bc2d6cf592b956ed2e4",
+    "https://hm.baidu.com/hm.gif?hca=DB57F843F674A30D&cc=1&ck=1&cl=24-bit&ds=1829x1143&vl=979&ep=0*0*-385*-2751*0*%23layoutScreen%3Ediv%5B5%5D%3Ediv%5B2%5D%3Eul%3Eli%5B2%5D*116*40*b!1032*2161*60*76*0*%23layoutScreen%3Ediv%5B5%5D%3Ediv%5B2%5D%3Ediv%3Ediv%5B4%5D%3Ediv%5B3%5D%3Ediv%3Ediv%5B2%5D*1200*64*b&et=2&ja=0&ln=zh-cn&lo=0&lt=1785163364&rnd=1309154053&si=63b82ac6d9948bad5e14b1398610939a&su=https%3A%2F%2Flive.leisu.com%2Fdetail-4614008&v=1.3.2&lv=2&sn=41966&r=0&ww=1829&u=https%3A%2F%2Flive.leisu.com%2Fdetail-4614008",
+    "https://hm.baidu.com/hm.gif?hca=DB57F843F674A30D&cc=1&ck=1&cl=24-bit&ds=1829x1143&vl=979&ep=488505%2C9771&et=3&ja=0&ln=zh-cn&lo=0&lt=1785163364&rnd=853487310&si=63b82ac6d9948bad5e14b1398610939a&su=https%3A%2F%2Flive.leisu.com%2Fdetail-4614008&v=1.3.2&lv=2&sn=41966&r=0&ww=1829&u=https%3A%2F%2Flive.leisu.com%2Fdetail-4614008",
+    "https://hm.baidu.com/hm.gif?hca=DB57F843F674A30D&cc=1&ck=1&cl=24-bit&ds=1829x1143&vl=979&et=0&ja=0&ln=zh-cn&lo=0&lt=1785163364&rnd=2024667016&si=63b82ac6d9948bad5e14b1398610939a&su=https%3A%2F%2Flive.leisu.com%2Fdetail-4614008&v=1.3.2&lv=2&sn=42456&r=0&ww=1829&u=https%3A%2F%2Flive.leisu.com%2Fdetail-4614008&tt=%E8%88%AC%E5%B0%BC%E4%BA%9A%E6%96%AFU19vs%E5%8D%A1%E5%B0%94%E5%B7%B4%E8%81%94%E7%9B%9FU19%E7%9B%B4%E6%92%AD-%E9%9B%B7%E9%80%9F%E4%BD%93%E8%82%B2",
+    "https://web-gateway.leisu.com/v1/web/match/football/match_analysis?match_id=4614008&acw_sc__v2=1234cf0d46-b4a450e7cda2621d479b5216e63ffa250b8bdb906e4a3b2f78",
+    "https://web-gateway.leisu.com/v1/web/chat/msg_history?room_id=R1_4614008&acw_sc__v2=1234cf0d46-b4a450e7cda2621d479b5216e63ffa250b8bdb906e4a3b2f78",
+    "https://static.leisu.com/public/js/mod_live/vue_component/detail_animat_live-2c9ba6e6f3.js",
+    "https://static.leisu.com/public/js/mod_live/vue_component/detail_chatroom-966c574c46.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail-e425345c44.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/league-af6a868ef4.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/mixin-ae3defab18.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/recent_rank-29aea79e92.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/trend-221a7e07f9.js",
+    "https://static.leisu.com/public/js/mod_live/football/detail/distribution-b4e93413cb.js"
+  ],
+  "dollar_keys": [
+    "prototype",
+    "noData",
+    "hasData",
+    "data",
+    "removeData",
+    "_data",
+    "acceptData",
+    "cleanData",
+    "rot2",
+    "rot"
+  ],
+  "global_function_names": []
+}

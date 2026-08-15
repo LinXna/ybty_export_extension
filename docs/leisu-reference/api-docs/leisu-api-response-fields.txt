@@ -1,0 +1,1692 @@
+获取变动比赛列表：
+[
+ {
+比赛列表
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+coverage:	
+ {
+动画、情报、阵容 字段
+mlive:	
+ integer
+是否有动画，1-是、0-否
+intelligence:	
+ integer
+是否有情报，1-是、0-否
+lineup:	
+ integer
+是否有阵容，1-是、0-否
+}
+venue_id:	
+ integer
+场馆id
+referee_id:	
+ integer
+裁判id
+related_id:	
+ integer
+双回合中另一回合比赛id
+agg_score:	
+[
+双回合常规时间(包括加时时间)总比分 字段说明
+example：[3, 6]
+Enum:
+Array[2]
+0:"主队比分 - int"
+1:"客队比分 - int"
+]
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+environment:	
+ {
+比赛环境,有数据才有此字段
+weather:	
+ integer
+天气id
+1:局部有云
+2:多云
+3:局部有云/雨
+4:雪
+5:晴
+6:阴有雨/局部有雷暴
+7:阴
+8:薄雾
+9:阴有雨
+10:多云有雨
+11:多云有雨/局部有雷暴
+12:局部有云/雨和雷暴
+13:雾
+pressure:	
+ string
+气压
+temperature:	
+ string
+温度
+wind:	
+ string
+风速
+humidity:	
+ string
+湿度
+}
+tbd:	
+ integer
+比赛时间是否待定 1.是（有数据时返回）
+has_ot:	
+ integer
+是否有加时 1.是（有数据时返回）
+ended:	
+ integer
+结束时间（有数据时返回）
+team_reverse:	
+ integer
+是否主客相反 1.是（有数据时返回 eg：相反-官网A vs B、纳米B vs A）
+loss:	
+ integer
+是否判负 1.是（有数据时返回）
+referees:	
+ {
+裁判组,有数据才有此字段
+assistant1:	
+ integer
+助理裁判1
+assistant2:	
+ integer
+助理裁判2
+fourth:	
+ integer
+第四官员
+var:	
+ integer
+var裁判
+assistant_var:	
+[
+var助理裁判 字段说明
+example：[6261, 6262]
+Enum:
+Array[2]
+0:"助理裁判1 - int"
+1:"助理裁判2 - int"
+]
+}
+updated_at:	
+ integer
+更新时间
+}
+]
+
+获取实时统计数据
+[
+ {
+实时数据
+id:	
+ integer
+比赛id
+score:	
+[
+比分字段说明
+example：[2783605,8,[1, 0, 0, 0, -1, 0, 0],[1, 0, 0, 0, -1, 0, 0],0,""]
+Enum:
+Array[6]
+0:"纳米比赛id - int"
+1:"比赛状态，详见状态码->比赛状态 - int"
+2:Array[7]
+0:"主队比分(常规时间) - int"
+1:"主队半场比分 - int"
+2:"主队红牌 - int"
+3:"主队黄牌 - int"
+4:"主队角球，-1表示没有角球数据 - int"
+5:"主队加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"主队点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+3:Array[7]
+0:"客队比分(常规时间) - int"
+1:"客队半场比分 - int"
+2:"客队红牌 - int"
+3:"客队黄牌 - int"
+4:"客队角球，-1表示没有角球数据 - int"
+5:"客队加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"客队点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+4:"开球时间戳，上/下半场开球时间(根据比赛状态判断) - int"
+5:"备注信息，可忽略 - string"
+]
+stats:	
+[
+比赛统计字段说明，可能不存在
+ {
+比赛统计字段说明
+type:	
+ integer
+类型，详见状态码->技术统计
+home:	
+ integer
+主队值
+away:	
+ integer
+客队值
+}
+]
+incidents:	
+[
+比赛事件字段说明，可能不存在
+ {
+比赛事件字段说明
+type:	
+ integer
+类型，详见状态码->技术统计
+position:	
+ integer
+事件发生方，0-中立、1-主队、2-客队
+time:	
+ integer
+时间(分钟)
+second:	
+ integer
+时间
+player_id:	
+ integer
+事件相关球员id，可能不存在
+assist1-助攻球员1
+assist2-助攻球员2
+in_player-换上球员
+out_player-换下球员
+player_name:	
+ string
+事件相关球员名称，可能不存在
+home_score:	
+ integer
+主队比分（进球、未进球 事件存在）
+away_score:	
+ integer
+客队比分（进球、未进球 事件存在）
+var_reason:	
+ integer
+VAR原因（VAR事件存在）
+1-进球判定
+2-进球未判定
+3-点球判定
+4-点球未判定
+5-红牌判定
+6-出牌处罚判定
+7-错认身份
+8-角球判定
+9-角球未判定
+0-其他
+var_result:	
+ integer
+VAR结果（VAR事件存在）
+1-进球有效
+2-进球无效
+3-点球有效
+4-点球取消
+5-红牌有效
+6-红牌取消
+7-出牌处罚核实
+8-出牌处罚更改
+9-维持原判
+10-判罚更改
+11-角球有效
+12-角球无效
+0-未知
+reason_type:	
+ integer
+红黄牌、换人事件原因，详见状态码->事件原因（红黄牌、换人事件存在）
+add_time:	
+ integer
+补时（伤停补时事件、伤停补时中发生的事件存在）
+not_on_pitch:	
+ integer
+是否场下 1.是（红黄牌事件存在）
+person_type:	
+ integer
+人员类型 1.主教练 2.教练组及工作人员 (红黄牌事件存在）
+miss:	
+ integer
+是否停赛 1.是（红黄牌事件存在）
+}
+]
+tlive:	
+[
+文字直播字段说明，可能不存在
+ {
+文字直播字段说明
+main:	
+ integer
+是否重要事件，1-是、0-否
+type:	
+ integer
+类型，详见状态码->技术统计
+position:	
+ integer
+事件发生方，0-中立、1-主队、2-客队
+time:	
+ string
+事件时间(分钟)
+data:	
+ string
+事件内容
+}
+]
+}
+]
+
+
+获取实时比赛趋势
+[
+ {
+match_id:	
+ integer
+比赛id
+trend:	
+ {
+count:	
+ integer
+半场数
+per:	
+ integer
+半场时长
+data:	
+[
+趋势变化，按分钟数变化
+example：[[16, 0, -2], [-16, 0, 1]]
+Enum:
+Array[2]
+0:Array[1]
+0:"上半场，趋势变化数据 - int"
+1:Array[1]
+0:"下半场，趋势变化数据 - int"
+]
+incidents:	
+[
+事件列表
+ {
+比赛事件字段说明
+type:	
+ integer
+类型，详见状态码->技术统计
+time:	
+ string
+时间(分钟)
+position:	
+ integer
+事件发生方 1-主队、2-客队
+}
+]
+}
+}
+]
+
+获取比赛阵容详情
+ {
+confirmed:	
+ integer
+正式阵容 1-是、0-不是
+home_formation:	
+ string
+主队阵型
+away_formation:	
+ string
+客队阵型
+home_coach_id:	
+ integer
+主队带队教练
+away_coach_id:	
+ integer
+客队带队教练
+home_color:	
+ string
+主队球衣颜色
+away_color:	
+ string
+客队球衣颜色
+home:	
+[
+主队阵型球员列表
+ {
+阵容列表
+id:	
+ integer
+球员id
+team_id:	
+ integer
+球队id
+first:	
+ integer
+是否首发，1-是、0-否
+captain:	
+ integer
+是否队长，1-是、0-否
+name:	
+ string
+球员名称
+logo:	
+ string
+球员logo
+national_logo:	
+ string
+球员logo(国家队)
+shirt_number:	
+ integer
+球衣号
+position:	
+ string
+球员位置，F前锋、M中场、D后卫、G守门员、其他为未知
+x:	
+ integer
+阵容x坐标，总共100
+y:	
+ integer
+阵容y坐标，总共100
+rating:	
+ string
+评分，10为满分
+incidents:	
+[
+球员事件列表，有事件存在，默认不存在
+ {
+事件列表
+type:	
+ integer
+事件类型，详见状态码->技术统计
+time:	
+ string
+事件发生时间（含加时时间，'A+B':A-比赛时间,B-加时时间）
+belong:	
+ integer
+发生方，0-中立、1-主队、2-客队
+home_score:	
+ integer
+主队比分
+away_score:	
+ integer
+客队比分
+player:	
+ {
+球员信息
+player-相关球员
+assist1-助攻球员1
+assist2-助攻球员2
+in_player-换上球员
+out_player-换下球员
+id:	
+ integer
+球员id
+name:	
+ string
+中文名称
+}
+reason_type:	
+ integer
+红黄牌、换人事件原因，详见状态码->事件原因（红黄牌、换人事件存在）
+}
+]
+}
+]
+away:	
+[
+客队阵型球员列表
+ {
+阵容列表
+id:	
+ integer
+球员id
+team_id:	
+ integer
+球队id
+first:	
+ integer
+是否首发，1-是、0-否
+captain:	
+ integer
+是否队长，1-是、0-否
+name:	
+ string
+球员名称
+logo:	
+ string
+球员logo
+national_logo:	
+ string
+球员logo(国家队)
+shirt_number:	
+ integer
+球衣号
+position:	
+ string
+球员位置，F前锋、M中场、D后卫、G守门员、其他为未知
+x:	
+ integer
+阵容x坐标，总共100
+y:	
+ integer
+阵容y坐标，总共100
+rating:	
+ string
+评分，10为满分
+incidents:	
+[
+球员事件列表，有事件存在，默认不存在
+ {
+事件列表
+type:	
+ integer
+事件类型，详见状态码->技术统计
+time:	
+ string
+事件发生时间（含加时时间，'A+B':A-比赛时间,B-加时时间）
+belong:	
+ integer
+发生方，0-中立、1-主队、2-客队
+home_score:	
+ integer
+主队比分
+away_score:	
+ integer
+客队比分
+player:	
+ {
+球员信息
+player-相关球员
+assist1-助攻球员1
+assist2-助攻球员2
+in_player-换上球员
+out_player-换下球员
+id:	
+ integer
+球员id
+name:	
+ string
+中文名称
+}
+reason_type:	
+ integer
+红黄牌、换人事件原因，详见状态码->事件原因（红黄牌、换人事件存在）
+}
+]
+}
+]
+}
+
+
+获取比赛分析数据
+ {
+info:	
+ {
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+odds:	
+[
+BET365初盘
+example：["0.86,-0.5,1.04,0","3.8,3.6,2.05,0","0.9,2.75,1.0,0","0.9,9,0.9,0"]
+Enum:
+Array[4]
+0:"亚盘   主,盘口,客,是否封盘 - string"
+1:"欧盘   胜,平,负,是否封盘   - string"
+2:"大小盘 大,盘口,小,是否封盘 - string"
+3:"角球   大,盘口,小,是否封盘 - string"
+]
+}
+history:	
+ {
+历史交锋/近期战绩
+vs:	
+[
+历史交锋（格式同 info比赛信息字段）
+ {
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+odds:	
+[
+BET365初盘
+example：["0.86,-0.5,1.04,0","3.8,3.6,2.05,0","0.9,2.75,1.0,0","0.9,9,0.9,0"]
+Enum:
+Array[4]
+0:"亚盘   主,盘口,客,是否封盘 - string"
+1:"欧盘   胜,平,负,是否封盘   - string"
+2:"大小盘 大,盘口,小,是否封盘 - string"
+3:"角球   大,盘口,小,是否封盘 - string"
+]
+}
+]
+home:	
+[
+主队近期战绩（格式同 info比赛信息字段）
+ {
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+odds:	
+[
+BET365初盘
+example：["0.86,-0.5,1.04,0","3.8,3.6,2.05,0","0.9,2.75,1.0,0","0.9,9,0.9,0"]
+Enum:
+Array[4]
+0:"亚盘   主,盘口,客,是否封盘 - string"
+1:"欧盘   胜,平,负,是否封盘   - string"
+2:"大小盘 大,盘口,小,是否封盘 - string"
+3:"角球   大,盘口,小,是否封盘 - string"
+]
+}
+]
+away:	
+[
+客队近期战绩（格式同 info比赛信息字段）
+ {
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+odds:	
+[
+BET365初盘
+example：["0.86,-0.5,1.04,0","3.8,3.6,2.05,0","0.9,2.75,1.0,0","0.9,9,0.9,0"]
+Enum:
+Array[4]
+0:"亚盘   主,盘口,客,是否封盘 - string"
+1:"欧盘   胜,平,负,是否封盘   - string"
+2:"大小盘 大,盘口,小,是否封盘 - string"
+3:"角球   大,盘口,小,是否封盘 - string"
+]
+}
+]
+}
+future:	
+ {
+未来赛程
+vs:	
+[
+交锋赛程（格式同 info比赛信息字段）
+ {
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+odds:	
+[
+BET365初盘
+example：["0.86,-0.5,1.04,0","3.8,3.6,2.05,0","0.9,2.75,1.0,0","0.9,9,0.9,0"]
+Enum:
+Array[4]
+0:"亚盘   主,盘口,客,是否封盘 - string"
+1:"欧盘   胜,平,负,是否封盘   - string"
+2:"大小盘 大,盘口,小,是否封盘 - string"
+3:"角球   大,盘口,小,是否封盘 - string"
+]
+}
+]
+home:	
+[
+主队近期赛程（格式同 info比赛信息字段）
+ {
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+odds:	
+[
+BET365初盘
+example：["0.86,-0.5,1.04,0","3.8,3.6,2.05,0","0.9,2.75,1.0,0","0.9,9,0.9,0"]
+Enum:
+Array[4]
+0:"亚盘   主,盘口,客,是否封盘 - string"
+1:"欧盘   胜,平,负,是否封盘   - string"
+2:"大小盘 大,盘口,小,是否封盘 - string"
+3:"角球   大,盘口,小,是否封盘 - string"
+]
+}
+]
+away:	
+[
+客队近期赛程（格式同 info比赛信息字段）
+ {
+id:	
+ integer
+比赛id
+season_id:	
+ integer
+赛季id
+competition_id:	
+ integer
+赛事id
+home_team_id:	
+ integer
+主队id
+away_team_id:	
+ integer
+客队id
+status_id:	
+ integer
+比赛状态，详见状态码->比赛状态
+match_time:	
+ integer
+比赛时间
+neutral:	
+ integer
+是否中立场，1-是、0-否
+note:	
+ string
+备注
+home_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+away_scores:	
+[
+比分字段说明
+example：[1, 0, 0, 0, -1, 0, 0]
+Enum:
+Array[7]
+0:"比分(常规时间) - int"
+1:"半场比分 - int"
+2:"红牌 - int"
+3:"黄牌 - int"
+4:"角球，-1表示没有角球数据 - int"
+5:"加时比分(120分钟，即包括常规时间比分)，加时赛才有 - int"
+6:"点球大战比分(不包含常规时间及加时赛比分)，点球大战才有 - int"
+]
+home_position:	
+ string
+主队排名
+away_position:	
+ string
+客队排名
+round:	
+ {
+关联信息
+stage_id:	
+ integer
+阶段id
+group_num:	
+ integer
+第几组，1-A、2-B以此类推
+round_num:	
+ integer
+第几轮
+}
+odds:	
+[
+BET365初盘
+example：["0.86,-0.5,1.04,0","3.8,3.6,2.05,0","0.9,2.75,1.0,0","0.9,9,0.9,0"]
+Enum:
+Array[4]
+0:"亚盘   主,盘口,客,是否封盘 - string"
+1:"欧盘   胜,平,负,是否封盘   - string"
+2:"大小盘 大,盘口,小,是否封盘 - string"
+3:"角球   大,盘口,小,是否封盘 - string"
+]
+}
+]
+}
+goal_distribution:	
+ {
+进球分布，可能不存在
+home:	
+ {
+主队进球分布，没有数据为空
+all:	
+ {
+全部场次
+matches:	
+ integer
+比赛场次
+scored:	
+[
+主队进球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+conceded:	
+[
+主队失球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+}
+home:	
+ {
+主场场次
+matches:	
+ integer
+比赛场次
+scored:	
+[
+主队主场进球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+conceded:	
+[
+主队主场失球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+}
+away:	
+ {
+客场场次
+matches:	
+ integer
+比赛场次
+scored:	
+[
+主队客场进球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+conceded:	
+[
+主队客场失球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+}
+}
+away:	
+ {
+客队进球分布，没有数据为空
+all:	
+ {
+全部场次
+matches:	
+ integer
+比赛场次
+scored:	
+[
+客队进球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+conceded:	
+[
+客队失球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+}
+home:	
+ {
+主场场次
+matches:	
+ integer
+比赛场次
+scored:	
+[
+客队主场进球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+conceded:	
+[
+客队主场失球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+}
+away:	
+ {
+客场场次
+matches:	
+ integer
+比赛场次
+scored:	
+[
+客队客场进球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+conceded:	
+[
+客队客场失球分布
+[
+15分钟为一段，共6段
+example：[5, 26, 1, 15]
+Enum:
+Array[4]
+0:"个数 - int"
+1:"百分比（%） - int"
+2:"开始时间（分钟数） - int"
+3:"结束时间（分钟数） - int"
+]
+]
+}
+}
+}
+}
+
+
+获取历史比赛球队统计数据
+[
+ {
+比赛球队统计数据
+team_id:	
+ integer
+球队id
+goals:	
+ integer
+进球
+penalty:	
+ integer
+点球
+assists:	
+ integer
+助攻
+red_cards:	
+ integer
+红牌
+yellow_cards:	
+ integer
+黄牌
+shots:	
+ integer
+射门
+shots_on_target:	
+ integer
+射正
+dribble:	
+ integer
+过人
+dribble_succ:	
+ integer
+过人成功
+clearances:	
+ integer
+解围
+blocked_shots:	
+ integer
+射门被封堵
+interceptions:	
+ integer
+拦截
+tackles:	
+ integer
+抢断
+passes:	
+ integer
+传球
+passes_accuracy:	
+ integer
+传球成功
+key_passes:	
+ integer
+关键传球
+crosses:	
+ integer
+传中球
+crosses_accuracy:	
+ integer
+传中球成功
+long_balls:	
+ integer
+长传
+long_balls_accuracy:	
+ integer
+成功长传
+duels:	
+ integer
+1对1拼抢
+duels_won:	
+ integer
+1对1拼抢成功
+fouls:	
+ integer
+犯规
+was_fouled:	
+ integer
+被侵犯
+goals_against:	
+ integer
+失球
+offsides:	
+ integer
+越位
+yellow2red_cards:	
+ integer
+两黄变红
+corner_kicks:	
+ integer
+角球
+ball_possession:	
+ integer
+控球率
+freekicks:	
+ integer
+任意球
+freekick_goals:	
+ integer
+任意球得分
+hit_woodwork:	
+ integer
+击中门框
+fastbreaks:	
+ integer
+快攻
+fastbreak_shots:	
+ integer
+快攻射门
+fastbreak_goals:	
+ integer
+快攻进球
+poss_losts:	
+ integer
+丢失球权
+aerial_won:	
+ integer
+空中对抗成功
+aerial_lost:	
+ integer
+空中对抗失败
+ground_won:	
+ integer
+地面对抗成功
+ground_lost:	
+ integer
+地面对抗失败
+big_chance_created:	
+ integer
+绝佳机会创造
+big_chance_missed:	
+ integer
+绝佳机会错失
+shots_ibox:	
+ integer
+禁区内射门数
+shots_obox:	
+ integer
+禁区外射门数
+tackles_succ:	
+ integer
+抢断成功数
+touches:	
+ integer
+触球
+challenge_lost:	
+ integer
+被过
+ball_recovery:	
+ integer
+夺回球权
+saved_ibox:	
+ integer
+禁区内射门扑救
+saved_obox:	
+ integer
+禁区外射门扑救
+}
+]
+
+
+
+获取情报列表
+[
+ {
+情报
+id:	
+ integer
+比赛id
+good:	
+ {
+有利情报
+home:	
+[
+主队有利情报，不存在为空
+[
+情报字段说明
+example：[1, '']
+Enum:
+Array[2]
+0:"情报重要程度(1-5)，数值越大越重要 - int"
+1:"情报内容 - string"
+]
+]
+away:	
+[
+客队有利情报，不存在为空
+[
+情报字段说明
+example：[1, '']
+Enum:
+Array[2]
+0:"情报重要程度(1-5)，数值越大越重要 - int"
+1:"情报内容 - string"
+]
+]
+}
+bad:	
+ {
+不利情报
+home:	
+[
+主队不利情报，不存在为空
+[
+情报字段说明
+example：[1, '']
+Enum:
+Array[2]
+0:"情报重要程度(1-5)，数值越大越重要 - int"
+1:"情报内容 - string"
+]
+]
+away:	
+[
+客队不利情报，不存在为空
+[
+情报字段说明
+example：[1, '']
+Enum:
+Array[2]
+0:"情报重要程度(1-5)，数值越大越重要 - int"
+1:"情报内容 - string"
+]
+]
+}
+neutral:	
+[
+中立情报，不存在为空
+[
+情报字段说明
+example：[1, '']
+Enum:
+Array[2]
+0:"情报重要程度(1-5)，数值越大越重要 - int"
+1:"情报内容 - string"
+]
+]
+updated_at:	
+ integer
+更新时间
+}
+]
+
+
