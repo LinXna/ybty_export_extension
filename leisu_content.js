@@ -1269,46 +1269,68 @@
     return Math.max(1, Math.min(10, Number.isFinite(value) ? Math.floor(value) : 2));
   }
 
-  function markSelectedRows() {
-    for (const row of allMatchRows()) {
-      const event = parseRow(row);
-      if (!event) continue;
-      const eventId = String(event.id);
-      const selected = selectedEventIds.has(eventId);
-      row.dataset.codexLeisuEventId = eventId;
-      let checkbox = row.querySelector(":scope > .codex-leisu-match-checkbox");
-      if (!checkbox) {
-        checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.className = "codex-leisu-match-checkbox";
-        checkbox.title = "勾选后只导出所选比赛";
-        checkbox.style.cssText = [
-          "position:absolute",
-          "left:4px",
-          "top:50%",
-          "transform:translateY(-50%)",
-          "z-index:2147483646",
-          "width:18px",
-          "height:18px",
-          "cursor:pointer",
-          "accent-color:#ff9800"
-        ].join(";");
-        checkbox.addEventListener("click", (clickEvent) => clickEvent.stopPropagation());
-        checkbox.addEventListener("change", () => {
-          if (checkbox.checked) selectedEventIds.add(eventId);
-          else selectedEventIds.delete(eventId);
-          selectButton.textContent = `完成选择（已选${selectedEventIds.size}场）`;
-          showStatus(`已勾选${selectedEventIds.size}场；有勾选时只导出这些比赛。`);
-          markSelectedRows();
-        });
-        if (getComputedStyle(row).position === "static") row.style.position = "relative";
-        row.appendChild(checkbox);
-      }
-      checkbox.style.display = selectionMode ? "block" : "none";
-      checkbox.checked = selected;
-      row.style.outline = selected ? "3px solid #ff9800" : "";
-      row.style.outlineOffset = selected ? "-3px" : "";
+  let selectionRenderVersion = 0;
+  let selectionRefreshPending = false;
+
+  function syncSelectedRow(row, event = parseRow(row)) {
+    if (!event?.id) return;
+    const eventId = String(event.id);
+    const selected = selectedEventIds.has(eventId);
+    row.dataset.codexLeisuEventId = eventId;
+    let checkbox = row.querySelector(":scope > .codex-leisu-match-checkbox");
+    if (!checkbox) {
+      checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "codex-leisu-match-checkbox";
+      checkbox.title = "勾选后只导出所选比赛";
+      checkbox.style.cssText = [
+        "position:absolute",
+        "left:4px",
+        "top:50%",
+        "transform:translateY(-50%)",
+        "z-index:2147483646",
+        "width:18px",
+        "height:18px",
+        "cursor:pointer",
+        "accent-color:#ff9800"
+      ].join(";");
+      checkbox.addEventListener("click", (clickEvent) => clickEvent.stopPropagation());
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) selectedEventIds.add(eventId);
+        else selectedEventIds.delete(eventId);
+        selectButton.textContent = `完成选择（已选${selectedEventIds.size}场）`;
+        showStatus(`已勾选${selectedEventIds.size}场；有勾选时只导出这些比赛。`);
+        syncSelectedRow(row, { id: eventId });
+      });
+      if (getComputedStyle(row).position === "static") row.style.position = "relative";
+      row.appendChild(checkbox);
     }
+    checkbox.style.display = selectionMode ? "block" : "none";
+    checkbox.checked = selected;
+    row.style.outline = selected ? "3px solid #ff9800" : "";
+    row.style.outlineOffset = selected ? "-3px" : "";
+  }
+
+  function markSelectedRows() {
+    const rows = allMatchRows();
+    const version = ++selectionRenderVersion;
+    let index = 0;
+    const renderBatch = () => {
+      if (version !== selectionRenderVersion) return;
+      const end = Math.min(index + 25, rows.length);
+      for (; index < end; index += 1) syncSelectedRow(rows[index]);
+      if (index < rows.length) requestAnimationFrame(renderBatch);
+    };
+    renderBatch();
+  }
+
+  function scheduleSelectedRowsRefresh() {
+    if (!selectionMode || selectionRefreshPending) return;
+    selectionRefreshPending = true;
+    requestAnimationFrame(() => {
+      selectionRefreshPending = false;
+      markSelectedRows();
+    });
   }
 
   function toggleSelectionMode() {
@@ -1346,7 +1368,7 @@
       else selectedEventIds.add(id);
       selectButton.textContent = `完成选择（已选${selectedEventIds.size}场）`;
       showStatus(`选择模式：已选${selectedEventIds.size}场；再次点击比赛可取消。`);
-      markSelectedRows();
+      syncSelectedRow(row, parsed);
     },
     true
   );
@@ -1661,6 +1683,41 @@
       data: item?.data ?? null
     })).filter((item) => item.data != null || item.time != null);
   }
+  function normalizeAttackMomentumTimeline(detail) {
+    const runtime = detail?.responses?.["runtime:frontend-interface-state"]?.data?.body;
+    const candidates = [
+      {
+        source: "LIVE_DETAIL_VUE.trend.data",
+        trend: runtime?.attack_momentum_trend
+      },
+      {
+        source: "match_detail.trend.data",
+        trend: initialDetailPayload(detail)?.match_detail?.trend
+      }
+    ];
+    const selected = candidates.find(({ trend }) => Array.isArray(trend?.data));
+    if (!selected) {
+      return {
+        available: false,
+        source: null,
+        data: [],
+        segment_count: 0,
+        nominal_segment_minutes: null,
+        reason: "attack_momentum_trend_not_captured"
+      };
+    }
+    return {
+      available: true,
+      source: selected.source,
+      segment_count: Number.isFinite(Number(selected.trend.count))
+        ? Number(selected.trend.count)
+        : selected.trend.data.length,
+      nominal_segment_minutes: Number.isFinite(Number(selected.trend.per))
+        ? Number(selected.trend.per)
+        : null,
+      data: selected.trend.data
+    };
+  }
   function normalizeInitialPayloadOdds(detail) {
     const root = initialDetailPayload(detail);
     const odds = root?.top_data?.match_odds || root?.match_odds;
@@ -1778,14 +1835,24 @@
   async function exportInterfaceData(includeEvidence = false) {
     if (collecting) return;
     const events = collectScriptCandidates().filter((event) => event.id);
-    const ids = [...(selectedEventIds.size ? events.filter((e) => selectedEventIds.has(String(e.id))) : events.slice(0, exportLimit()))].map((e) => String(e.id));
+    const limit = exportLimit();
+    const selectedEvents = (selectedEventIds.size
+      ? events.filter((event) => selectedEventIds.has(String(event.id)))
+      : events
+    ).slice(0, limit);
+    const ids = selectedEvents.map((event) => String(event.id));
     if (!ids.length) return showStatus("没有找到可导出的比赛ID", true);
     showStatus(`正在获取${ids.length}场比赛的详情页接口...`);
     collecting = true;
     const results = [];
     (async () => {
       try {
-        for (const event of events.filter((item) => ids.includes(String(item.id)))) {
+        const concurrency = Math.min(detailConcurrency(), selectedEvents.length);
+        let nextEventIndex = 0;
+        const worker = async () => {
+          while (nextEventIndex < selectedEvents.length) {
+            const eventIndex = nextEventIndex++;
+            const event = selectedEvents[eventIndex];
           const statistics = await collectStatisticsApi(event);
           const detail = await collectDetailApi(event, true);
           const decoded = await new Promise((resolve) => {
@@ -1805,6 +1872,7 @@
           const capturedTextLive = normalizeInitialPayloadTextLive(detail);
           const lineup = normalizeDirectLineup(detail);
           const formalOdds = normalizeInitialPayloadOdds(detail);
+          const attackMomentumTimeline = normalizeAttackMomentumTimeline(detail);
           const capturedOpeningOdds = formalOdds ? {
             source: formalOdds.source,
             asian_handicap: formalOdds.markets?.asian_handicap?.initial || null,
@@ -1835,11 +1903,13 @@
               shots_on_target: statByCode["21"] || null,
               shots_off_target: statByCode["22"] || null
             },
+            attack_momentum_timeline: attackMomentumTimeline,
             text_live: capturedTextLive
           } : null;
           const completeness = {
             static_match: Boolean(staticDetail),
             live_match: Boolean(liveDetail),
+            attack_momentum_timeline: attackMomentumTimeline.available,
             match_analysis: Boolean(analysisFields.parsed_match_analysis),
             text_live: capturedTextLive.length > 0,
             odds: Boolean(formalOdds),
@@ -1849,7 +1919,7 @@
             trend_summary: Boolean(analysisFields.trend_summary),
             lineup: Boolean(lineup)
           };
-          results.push({
+          results[eventIndex] = {
             match_id: String(event.id),
             available: completeness.static_match && completeness.live_match && completeness.match_analysis,
             complete: Object.values(completeness).every(Boolean),
@@ -1868,16 +1938,18 @@
               trend_summary: analysisFields.trend_summary || null,
               lineup
             }
-          });
+          };
           if (includeEvidence) {
-            results[results.length - 1].evidence = {
+            results[eventIndex].evidence = {
               statistics_api: statistics,
               detail_api: detail,
               decoded_interface: decoded,
               parsed_match_analysis: analysisFields.parsed_match_analysis || null
             };
           }
-        }
+          }
+        };
+        await Promise.all(Array.from({ length: concurrency }, () => worker()));
         const exportType = includeEvidence ? "leisu_interface_diagnostic" : "leisu_interface_data";
         download({ export_version: EXPORT_VERSION, export_type: exportType, captured_at: new Date().toISOString(), results }, includeEvidence ? "interface_diagnostic" : "interface_data");
         showStatus(`接口导出完成：成功${results.filter((item) => item.available).length}/${ids.length}场`);
@@ -1927,6 +1999,7 @@
   button.type = "button";
   button.textContent = "导出滚球分析数据";
   button.style.cssText = [
+    "display:none",
     "position:fixed",
     "right:18px",
     "bottom:66px",
@@ -1950,6 +2023,7 @@
   prematchButton.type = "button";
   prematchButton.textContent = "导出赛前分析数据";
   prematchButton.style.cssText = [
+    "display:none",
     "position:fixed",
     "right:18px",
     "bottom:114px",
@@ -2069,8 +2143,14 @@
   if (!document.getElementById(BUTTON_ID)) {
     document.body?.appendChild(button);
   }
-  const selectionObserver = new MutationObserver(() => {
-    if (selectionMode || selectedEventIds.size) markSelectedRows();
+  const selectionObserver = new MutationObserver((mutations) => {
+    const pluginOnlyChanges = mutations.every((mutation) =>
+      [...mutation.addedNodes].every((node) =>
+        node.nodeType === Node.ELEMENT_NODE && node.classList.contains("codex-leisu-match-checkbox")
+      )
+    );
+    if (pluginOnlyChanges) return;
+    scheduleSelectedRowsRefresh();
   });
   selectionObserver.observe(document.documentElement, { childList: true, subtree: true });
   showStatus("等待导出：默认最多10场，也可手动选择指定比赛。");

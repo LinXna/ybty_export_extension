@@ -1,0 +1,850 @@
+{
+  "schema_version": 2,
+  "export_version": "2.8.0",
+  "source": "ybty",
+  "source_url": "https://user-pc-new.zlshelves.com/#/home",
+  "page_title": "体育-亚洲在线体育竞猜投注",
+  "page_context": {
+    "page_title": "体育-亚洲在线体育竞猜投注",
+    "page_hint": "Tab_1",
+    "requested_mode": "live",
+    "detected_mode": "live",
+    "mode_verified": true,
+    "mode_conflict": false,
+    "mode_verification_source": "exported_match_clock_state"
+  },
+  "export_mode": "live",
+  "captured_at": "2026-08-20T17:37:02.195Z",
+  "count": 3,
+  "summary": {
+    "scanned_count": 7,
+    "parsed_count": 6,
+    "parse_failure_count": 1,
+    "valid_count": 3,
+    "filtered_count": 3,
+    "electronic_filtered_count": 1,
+    "mode_filtered_count": 2,
+    "exported_count": 3,
+    "market_title_verified_count": 18,
+    "market_title_unverified_count": 0,
+    "duration_seconds": 6.2
+  },
+  "matches": [
+    {
+      "source_match_id": null,
+      "league": "欧洲联赛资格赛 - 附加赛",
+      "home": "米亚尔比",
+      "away": "萨尔茨堡红牛",
+      "home_score": "0",
+      "away_score": "0",
+      "clock": "81:15",
+      "clock_status": "81:15",
+      "added_time": null,
+      "countdown": null,
+      "play_count": "67+",
+      "commence_time": null,
+      "_pre_start_text": null,
+      "captured_at": "2026-08-20T17:36:57.217Z",
+      "markets": [
+        {
+          "line_index": 0,
+          "market": "full_h2h",
+          "market_title": "全场独赢",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "主",
+          "home_odds": "7.60",
+          "away_selection": "客",
+          "away_odds": "3.70",
+          "draw_odds": "1.44",
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "主",
+              "line": null,
+              "odds": "7.60",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "option_text_or_dom",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "主7.60"
+            },
+            {
+              "selection": "客",
+              "line": null,
+              "odds": "3.70",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "option_text_or_dom",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "客3.70"
+            },
+            {
+              "selection": "平",
+              "line": null,
+              "odds": "1.44",
+              "side": "draw",
+              "side_verified": true,
+              "side_source": "option_text_or_dom",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "平1.44"
+            }
+          ]
+        },
+        {
+          "line_index": 0,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "+0/0.5",
+          "home_odds": "1.49",
+          "away_selection": "-0/0.5",
+          "away_odds": "2.63",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "+0/0.5",
+              "line": null,
+              "odds": "1.49",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "+0/0.51.49"
+            },
+            {
+              "selection": "-0/0.5",
+              "line": null,
+              "odds": "2.63",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "-0/0.52.63"
+            }
+          ]
+        },
+        {
+          "line_index": 0,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "0.5",
+              "line": "0.5",
+              "odds": "2.35",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 0.52.35"
+            },
+            {
+              "selection": "0.5",
+              "line": "0.5",
+              "odds": "1.60",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 0.51.60"
+            }
+          ]
+        },
+        {
+          "line_index": 1,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "0",
+          "home_odds": "2.96",
+          "away_selection": "0",
+          "away_odds": "1.39",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "0",
+              "line": null,
+              "odds": "2.96",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "02.96"
+            },
+            {
+              "selection": "0",
+              "line": null,
+              "odds": "1.39",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "01.39"
+            }
+          ]
+        },
+        {
+          "line_index": 1,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "0.5/1",
+              "line": "0.5/1",
+              "odds": "2.96",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 0.5/12.96"
+            },
+            {
+              "selection": "0.5/1",
+              "line": "0.5/1",
+              "odds": "1.37",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 0.5/11.37"
+            }
+          ]
+        },
+        {
+          "line_index": 2,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "+0.5",
+          "home_odds": "1.29",
+          "away_selection": "-0.5",
+          "away_odds": "3.43",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "+0.5",
+              "line": null,
+              "odds": "1.29",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "+0.51.29"
+            },
+            {
+              "selection": "-0.5",
+              "line": null,
+              "odds": "3.43",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "-0.53.43"
+            }
+          ]
+        },
+        {
+          "line_index": 2,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "1",
+              "line": "1",
+              "odds": "5.30",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 15.30"
+            },
+            {
+              "selection": "1",
+              "line": "1",
+              "odds": "1.09",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 11.09"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_match_id": null,
+      "league": "欧洲联赛资格赛 - 附加赛",
+      "home": "乔治罗尼亚",
+      "away": "伊比利亚1999",
+      "home_score": "3",
+      "away_score": "0",
+      "clock": "77:02",
+      "clock_status": "77:02",
+      "added_time": null,
+      "countdown": null,
+      "play_count": "54+",
+      "commence_time": null,
+      "_pre_start_text": null,
+      "captured_at": "2026-08-20T17:36:57.771Z",
+      "markets": [
+        {
+          "line_index": 0,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "-0/0.5",
+          "home_odds": "1.93",
+          "away_selection": "+0/0.5",
+          "away_odds": "1.95",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "-0/0.5",
+              "line": null,
+              "odds": "1.93",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "-0/0.51.93"
+            },
+            {
+              "selection": "+0/0.5",
+              "line": null,
+              "odds": "1.95",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "+0/0.51.95"
+            }
+          ]
+        },
+        {
+          "line_index": 0,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "3.5/4",
+              "line": "3.5/4",
+              "odds": "2.12",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 3.5/42.12"
+            },
+            {
+              "selection": "3.5/4",
+              "line": "3.5/4",
+              "odds": "1.75",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 3.5/41.75"
+            }
+          ]
+        },
+        {
+          "line_index": 1,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "-0.5",
+          "home_odds": "2.53",
+          "away_selection": "+0.5",
+          "away_odds": "1.53",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "-0.5",
+              "line": null,
+              "odds": "2.53",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "-0.52.53"
+            },
+            {
+              "selection": "+0.5",
+              "line": null,
+              "odds": "1.53",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "+0.51.53"
+            }
+          ]
+        },
+        {
+          "line_index": 1,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "3.5",
+              "line": "3.5",
+              "odds": "1.74",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 3.51.74"
+            },
+            {
+              "selection": "3.5",
+              "line": "3.5",
+              "odds": "2.13",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 3.52.13"
+            }
+          ]
+        },
+        {
+          "line_index": 2,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "-0.5/1",
+          "home_odds": "3.32",
+          "away_selection": "+0.5/1",
+          "away_odds": "1.31",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "-0.5/1",
+              "line": null,
+              "odds": "3.32",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "-0.5/13.32"
+            },
+            {
+              "selection": "+0.5/1",
+              "line": null,
+              "odds": "1.31",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "+0.5/11.31"
+            }
+          ]
+        },
+        {
+          "line_index": 2,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "4",
+              "line": "4",
+              "odds": "3.00",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 43.00"
+            },
+            {
+              "selection": "4",
+              "line": "4",
+              "odds": "1.36",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 41.36"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_match_id": null,
+      "league": "波兰丁级联赛",
+      "home": "赫特曼泰考辛",
+      "away": "米哈洛沃",
+      "home_score": "3",
+      "away_score": "3",
+      "clock": "80:50",
+      "clock_status": "80:50",
+      "added_time": null,
+      "countdown": null,
+      "play_count": "29+",
+      "commence_time": null,
+      "_pre_start_text": null,
+      "captured_at": "2026-08-20T17:36:58.324Z",
+      "markets": [
+        {
+          "line_index": 0,
+          "market": "full_h2h",
+          "market_title": "全场独赢",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "主",
+          "home_odds": "3.00",
+          "away_selection": "客",
+          "away_odds": "4.75",
+          "draw_odds": "1.80",
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "主",
+              "line": null,
+              "odds": "3.00",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "option_text_or_dom",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "主3.00"
+            },
+            {
+              "selection": "客",
+              "line": null,
+              "odds": "4.75",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "option_text_or_dom",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "客4.75"
+            },
+            {
+              "selection": "平",
+              "line": null,
+              "odds": "1.80",
+              "side": "draw",
+              "side_verified": true,
+              "side_source": "option_text_or_dom",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "平1.80"
+            }
+          ]
+        },
+        {
+          "line_index": 0,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "-0/0.5",
+          "home_odds": "2.16",
+          "away_selection": "+0/0.5",
+          "away_odds": "1.54",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "-0/0.5",
+              "line": null,
+              "odds": "2.16",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "-0/0.52.16"
+            },
+            {
+              "selection": "+0/0.5",
+              "line": null,
+              "odds": "1.54",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "+0/0.51.54"
+            }
+          ]
+        },
+        {
+          "line_index": 0,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "6.5",
+              "line": "6.5",
+              "odds": "1.71",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 6.51.71"
+            },
+            {
+              "selection": "6.5",
+              "line": "6.5",
+              "odds": "1.97",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 6.51.97"
+            }
+          ]
+        },
+        {
+          "line_index": 1,
+          "market": "full_spread",
+          "market_title": "全场让球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": "0",
+          "home_odds": "1.49",
+          "away_selection": "0",
+          "away_odds": "2.23",
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "0",
+              "line": null,
+              "odds": "1.49",
+              "side": "home",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "01.49"
+            },
+            {
+              "selection": "0",
+              "line": null,
+              "odds": "2.23",
+              "side": "away",
+              "side_verified": true,
+              "side_source": "paired_home_away_rows",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "02.23"
+            }
+          ]
+        },
+        {
+          "line_index": 1,
+          "market": "full_total",
+          "market_title": "全场大小球",
+          "market_title_raw": null,
+          "market_type_source": "dom_title_and_option_semantics",
+          "market_type_verified": true,
+          "market_type_conflict": false,
+          "home_selection": null,
+          "home_odds": null,
+          "away_selection": null,
+          "away_odds": null,
+          "draw_odds": null,
+          "direction_verified": true,
+          "options": [
+            {
+              "selection": "6.5/7",
+              "line": "6.5/7",
+              "odds": "2.05",
+              "side": "over",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "大 6.5/72.05"
+            },
+            {
+              "selection": "6.5/7",
+              "line": "6.5/7",
+              "odds": "1.63",
+              "side": "under",
+              "side_verified": true,
+              "side_source": "option_text",
+              "suspended": false,
+              "market_data_available": true,
+              "odds_temporarily_unavailable": false,
+              "text": "小 6.5/71.63"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

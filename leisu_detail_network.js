@@ -222,6 +222,8 @@
           source: "leisu_frontend_runtime",
           text_live_source: "match_detail.tlive",
           lineup_source: "match_lineup",
+          attack_momentum_source: "LIVE_DETAIL_VUE.trend.data",
+          attack_momentum_trend: safeSnapshot(runtime.trend || {}),
           tlive: safeSnapshot(runtime.tlive || []),
           detail_live_list: safeSnapshot(runtime.detail_live_list || []),
           lineup: safeSnapshot(runtime.lineup || {}),
